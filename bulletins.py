@@ -512,13 +512,138 @@ def open_pdf_at_page(file_path, page_num):
     except Exception as e:
         messagebox.showerror("Erreur", f"Erreur inconnue : {e}")
 
+def show_details_in_frame(annee, mois, parent_frame):
+    """Affiche les détails des bulletins dans un cadre existant."""
+    # Nettoyer le cadre parent
+    for widget in parent_frame.winfo_children():
+        widget.destroy()
+
+    # Titre
+    tk.Label(parent_frame, text=f"📄 Bulletins de {mois} {annee}", 
+             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x")
+
+    columns = ("Nom", "Prénom", "Date", "Brut", "NetAvantImpot", "NetApresImpot", "Fichier", "Page")
+    tree = ttk.Treeview(parent_frame, columns=columns, show="headings", selectmode="extended")
+
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, anchor="center", width=120)
+
+    # Ajouter les bulletins du mois sélectionné
+    for bulletin in bulletins_cache[annee][mois]:
+        tree.insert("", "end", values=(
+            bulletin.get("Nom", "?"),
+            bulletin.get("Prénom", "?"),
+            bulletin["Date"],
+            f"{bulletin['Brut']} €",
+            f"{bulletin['NetAvantImpot']} €",
+            f"{bulletin['NetApresImpot']} €",
+            bulletin["Fichier"],
+            bulletin["Page"]
+        ))
+    tree.pack(expand=True, fill="both", padx=10, pady=10)
+
+    # Boutons
+    buttons_frame = tk.Frame(parent_frame, bg="#f0f0f0")
+    buttons_frame.pack(fill="x", pady=10)
+
+    # Fonction pour ouvrir le PDF
+    def open_selected():
+        selected_item = tree.selection()
+        if not selected_item:
+            messagebox.showwarning("Avertissement", "Veuillez sélectionner un bulletin.")
+            return
+
+        values = tree.item(selected_item[0], "values")
+        file_path = values[6]
+        page_num = int(values[7])
+
+        if not os.path.exists(file_path):
+            messagebox.showerror("Erreur", "Le fichier sélectionné n'existe plus.")
+            return
+        
+        open_pdf_at_page(file_path, page_num)
+
+    # Bouton pour afficher le bulletin
+    tk.Button(buttons_frame, text="📂 Afficher le bulletin", command=open_selected,
+              bg="#4682B4", fg="black", font=("Arial", 12, "bold")).pack(side="left", padx=10)
+    
+    # Bouton pour faire un virement
+    tk.Button(buttons_frame, text="💰 Faire virement", command=lambda: open_virement_window(tree),
+              bg="#32CD32", fg="black", font=("Arial", 12, "bold")).pack(side="left", padx=10)
+    
+    # Bouton retour aux bulletins
+    tk.Button(buttons_frame, text="🔙 Retour aux bulletins", 
+              command=lambda: show_bulletins_in_frame(parent_frame),
+              bg="#B0C4DE", fg="black", font=("Arial", 12, "bold")).pack(side="left", padx=10)
+
+def show_bulletins_in_frame(frame):
+    """Version de show_bulletins qui affiche dans un cadre existant."""
+    # Configuration du cadre
+    frame.config(bg="#f0f0f0")
+
+    # Bouton pour recharger les bulletins
+    reload_button = tk.Button(
+        frame, text="🔄 Recharger les bulletins",
+        command=lambda: [update_cache(force_reload=True), 
+                        refresh_same_frame(frame)],  # Utiliser refresh_same_frame au lieu de display_bulletins_in_container
+        bg="#FFA500", fg="black", font=("Arial", 12, "bold")
+    )
+    reload_button.pack(pady=5)
+
+    # Fonction auxiliaire pour rafraîchir le même cadre
+    def refresh_same_frame(frame_to_refresh):
+        """Vide et remplit à nouveau le même cadre."""
+        for widget in frame_to_refresh.winfo_children():
+            widget.destroy()
+        show_bulletins_in_frame(frame_to_refresh)
+
+    # Bouton pour scanner un fichier PDF
+    scan_pdf_button = tk.Button(
+        frame, text="📂 Scanner un PDF",
+        command=scan_new_pdf,
+        bg="#D3D3D3", fg="black", font=("Arial", 12, "bold")
+    )
+    scan_pdf_button.pack(pady=5)
+
+    # Titre
+    title_label = tk.Label(frame, text="📄 Sélectionnez un mois", font=("Arial", 14, "bold"), bg="#f0f0f0")
+    title_label.pack(pady=10)
+
+    # Cadre pour la grille des mois/années
+    frame_grille = tk.Frame(frame, bg="#f0f0f0")
+    frame_grille.pack()
+
+    # Assurez-vous que le cache est chargé
+    if not bulletins_cache:
+        update_cache()
+
+    # Affichage des années en haut
+    annees = sorted(bulletins_cache.keys()) if bulletins_cache else []
+    for col_idx, annee in enumerate(annees):
+        tk.Label(frame_grille, text=annee, font=("Arial", 12, "bold"), bg="#f0f0f0").grid(row=0, column=col_idx + 1, padx=20, pady=5)
+
+    # Affichage des mois sous chaque année
+    mois_list = list(MOIS_MAPPING.values())
+    for row_idx, mois in enumerate(mois_list, start=1):
+        # Afficher le nom du mois dans la première colonne
+        tk.Label(frame_grille, text=mois, font=("Arial", 10), bg="#f0f0f0").grid(row=row_idx, column=0, padx=10, pady=5)
+
+        for col_idx, annee in enumerate(annees):
+            if mois in bulletins_cache.get(annee, {}):
+                tk.Button(frame_grille, text=mois, width=12, height=2,
+                          command=lambda a=annee, m=mois, f=frame: show_details_in_frame(a, m, f),
+                          bg="#87CEEB", fg="black", font=("Arial", 10, "bold")).grid(row=row_idx, column=col_idx + 1, padx=5, pady=5)
+
+
+
 # 📌 Interface principale pour afficher les bulletins
 def show_bulletins():
     """Affiche l'interface des bulletins triés par année/mois dans le frame fourni"""
     # On utilise une variable globale fournie par display_in_right_frame
     # ou on crée une fenêtre Toplevel si appelé directement
     try:
-        # Si on est appelé via display_in_right_frame
+        # Si on est appelé via display_bulletins_in_container
         window = current_frame
     except NameError:
         # Si on est appelé directement (comportement original)

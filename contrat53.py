@@ -46,6 +46,8 @@ else:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 pyautogui.FAILSAFE = False
+current_frame = None  # Cette variable sera utilisée pour communiquer entre les fonctions
+
 
 # Fichier pour sauvegarder les chemins de fichiers
 chemin_script_virement = "/Users/vincentperreard/script contrats/generer_virement.py"
@@ -58,7 +60,7 @@ x_ok, y_ok = 946, 420    # Coordonnées du bouton "OK"
 
 
 
-from bulletins import show_bulletins
+from bulletins import show_bulletins, show_bulletins_in_frame, show_details_in_frame
 
 
 if not bulletins_path:
@@ -111,11 +113,74 @@ button_style = {
 
 def open_parameters():
     """Fenêtre pour modifier les chemins de fichiers et gérer les listes."""
-    param_window = Toplevel()
-    param_window.title("Paramètres des fichiers/identifiants")
-    param_window.configure(bg="#f2f7ff")
-    param_window.geometry("1000x950")  # Augmentation de la hauteur pour éviter les chevauchements
+    # Nettoyer le panneau droit
+    clear_right_frame()
+    
+    # Conteneur principal - utilisation d'un PanedWindow pour diviser l'espace
+    main_container = tk.PanedWindow(right_frame, orient=tk.HORIZONTAL)
+    main_container.pack(fill="both", expand=True)
+    
+    # Cadre gauche pour le menu des paramètres
+    params_menu_frame = tk.Frame(main_container, bg="#f0f4f7", padx=20, pady=20)
+    main_container.add(params_menu_frame, width=300)  # Largeur fixe pour le menu
+    
+    # Cadre droit pour l'affichage des fonctionnalités (initialement vide)
+    content_container = tk.Frame(main_container, bg="#f5f5f5", padx=20, pady=20)
+    main_container.add(content_container, width=900)  # Plus de place pour le contenu
+    
+    # Titre du menu des paramètres
+    tk.Label(params_menu_frame, text="⚙️ Paramètres", font=("Arial", 14, "bold"), 
+             bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    # Boutons du menu
+    tk.Button(params_menu_frame, text="🔄 Chemins des fichiers", 
+              command=lambda: display_file_paths_in_container(content_container),
+              width=25, bg="#DDDDDD", fg="black", 
+              font=("Arial", 10, "bold")).pack(pady=10)
+    
+    tk.Button(params_menu_frame, text="👨‍⚕️ Gestion MARS titulaires", 
+              command=lambda: display_mars_titulaires_in_container(content_container),
+              width=25, bg="#DDDDDD", fg="black", 
+              font=("Arial", 10, "bold")).pack(pady=10)
+    
+    tk.Button(params_menu_frame, text="🩺 Gestion MARS remplaçants", 
+              command=lambda: display_mars_remplacants_in_container(content_container),
+              width=25, bg="#DDDDDD", fg="black", 
+              font=("Arial", 10, "bold")).pack(pady=10)
+    
+    tk.Button(params_menu_frame, text="💉 Gestion IADE remplaçants", 
+              command=lambda: display_iade_remplacants_in_container(content_container),
+              width=25, bg="#DDDDDD", fg="black", 
+              font=("Arial", 10, "bold")).pack(pady=10)
+    
+    tk.Button(params_menu_frame, text="👥 Gestion des salariés", 
+              command=lambda: display_salaries_in_container(content_container),
+              width=25, bg="#DDDDDD", fg="black", 
+              font=("Arial", 10, "bold")).pack(pady=10)
+    
+    tk.Button(params_menu_frame, text="📝 Paramètres DocuSign", 
+              command=lambda: display_docusign_in_container(content_container),
+              width=25, bg="#DDDDDD", fg="black", 
+              font=("Arial", 10, "bold")).pack(pady=10)
+    
+    # Retour au menu principal
+    tk.Button(params_menu_frame, text="🔙 Retour au menu principal", 
+              command=lambda: [clear_right_frame(), show_welcome_image()], 
+              width=25, bg="#BBBBBB", fg="black", 
+              font=("Arial", 10, "bold")).pack(pady=20)
+    
+    # Afficher un message d'accueil initial dans le conteneur de droite
+    tk.Label(content_container, text="⚙️ Bienvenue dans les paramètres", 
+             font=("Arial", 16, "bold"), fg="#4a90e2", bg="#f5f5f5").pack(pady=20)
+    tk.Label(content_container, text="Sélectionnez une option dans le menu de gauche pour configurer l'application.", 
+             font=("Arial", 12), bg="#f5f5f5").pack(pady=10)
 
+def display_file_paths_in_container(container):
+    """Affiche l'interface de modification des chemins dans le conteneur spécifié."""
+    # Vider le conteneur
+    for widget in container.winfo_children():
+        widget.destroy()
+    
     # Charger les paramètres depuis config.json
     config_file = "config.json"
     if not os.path.exists(config_file):
@@ -127,13 +192,31 @@ def open_parameters():
     # Variables pour stocker les entrées
     bank_url_var = StringVar(value=config.get("bank_url", "https://espacepro.secure.lcl.fr/"))
     bank_id_var = StringVar(value=config.get("bank_id", ""))
-
-    # Conteneur principal
-    container = Frame(param_window, padx=20, pady=20, bg="#ADD8E6")
-    container.pack(fill="both", expand=True)
-
-    Label(container, text="Paramètres des fichiers", font=("Arial", 14, "bold"), fg="#007ACC", padx=20, pady=5).grid(row=0, column=0, columnspan=3, pady=10)
-
+    
+    # Titre
+    tk.Label(container, text="🔄 Configuration des chemins de fichiers", 
+           font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    # Cadre principal avec scrollbar pour gérer beaucoup de chemins
+    main_frame = tk.Frame(container, bg="#f5f5f5")
+    main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+    
+    # Ajouter une scrollbar si nécessaire
+    canvas = tk.Canvas(main_frame, bg="#f5f5f5")
+    scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+    scrollable_frame = tk.Frame(canvas, bg="#f5f5f5")
+    
+    scrollable_frame.bind(
+        "<Configure>",
+        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+    )
+    
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scrollbar.set)
+    
+    canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+    
     paths = [
         ("Chemin Excel MAR :", "excel_mar"),
         ("Chemin Excel IADE :", "excel_iade"),
@@ -145,76 +228,46 @@ def open_parameters():
         ("Dossier Frais/Factures :", "dossier_factures"),
         ("Chemin Excel Salariés :", "excel_salaries"),
     ]
-
+    
     # Dictionnaire pour stocker les variables de chaque chemin
     path_vars = {}
-    row_index = 1  # Ligne de départ pour les champs
-
+    
     def select_path(var, key):
         """Sélectionne un fichier ou un dossier selon le type de chemin."""
         print(f"📂 DEBUG : select_path() appelé pour {key}")  # ✅ Ajout d'un print pour debug
 
         if key in ["pdf_mar", "pdf_iade", "bulletins_salaire", "dossier_factures"]:
             # ✅ Pour les dossiers, utiliser askdirectory()
-            path = askdirectory(title="Sélectionnez un dossier")
+            path = filedialog.askdirectory(title="Sélectionnez un dossier")
         else:
             # ✅ Pour les fichiers, utiliser askopenfilename()
-            path = askopenfilename(title="Sélectionnez un fichier")
+            path = filedialog.askopenfilename(title="Sélectionnez un fichier")
 
         if path:  # ✅ Vérifier qu'un chemin a été sélectionné
-            print(f"📂 DEBUG : Nouveau chemin sélectionné : {path}")  # ✅ Vérification du retour de askdirectory
+            print(f"📂 DEBUG : Nouveau chemin sélectionné : {path}")  # ✅ Vérification du retour
             var.set(path)
-
+    
+    row_index = 0
     for label_text, key in paths:
-        print(f"📋 Ajout du champ : {label_text} avec la clé {key}")  # ✅ Vérification de chaque champ
-
         path_vars[key] = StringVar(value=file_paths.get(key, ""))
-        Label(container, text=label_text, font=("Arial", 12), anchor="w", padx=20, pady=10).grid(row=row_index, column=0, sticky="w", pady=3)
-        Entry(container, textvariable=path_vars[key], width=75).grid(row=row_index, column=1, pady=3)
-        Button(container, text="…", command=partial(select_path, path_vars[key], key), bg="#007ACC", fg="black").grid(row=row_index, column=2, padx=5, pady=3)    
+        ttk.Label(scrollable_frame, text=label_text, font=("Arial", 11)).grid(row=row_index, column=0, sticky="w", pady=3)
+        ttk.Entry(scrollable_frame, textvariable=path_vars[key], width=60).grid(row=row_index, column=1, sticky="w", pady=3)
+        ttk.Button(scrollable_frame, text="…", command=partial(select_path, path_vars[key], key)).grid(row=row_index, column=2, padx=5, pady=3)
         row_index += 1
-
-
-        
-    # ✅ Section des paramètres bancaires
+    
+    # Section pour les paramètres bancaires
     row_index += 1
-    Label(container, text="Paramètres bancaires", font=("Arial", 14, "bold"), fg="#007ACC", padx=20, pady=10).grid(row=row_index, column=0, columnspan=3, pady=10)
-
+    ttk.Label(scrollable_frame, text="Paramètres bancaires", font=("Arial", 12, "bold")).grid(row=row_index, column=0, columnspan=3, pady=10)
+    
     row_index += 1
-    Label(container, text="URL de la banque :", font=("Arial", 12), padx=20, pady=10).grid(row=row_index, column=0, sticky="w", pady=5)
-    Entry(container, textvariable=bank_url_var, width=75).grid(row=row_index, column=1, pady=5)
-
+    ttk.Label(scrollable_frame, text="URL de la banque :").grid(row=row_index, column=0, sticky="w", pady=5)
+    ttk.Entry(scrollable_frame, textvariable=bank_url_var, width=60).grid(row=row_index, column=1, pady=5)
+    
     row_index += 1
-    Label(container, text="Identifiant bancaire :", font=("Arial", 12), padx=20, pady=10).grid(row=row_index, column=0, sticky="w", pady=5)
-    Entry(container, textvariable=bank_id_var, width=75).grid(row=row_index, column=1, pady=5)
-
-    # ✅ Gestion des listes (ajustement pour éviter le chevauchement)
-    row_index += 2
-    Label(container, text="Gestion des listes :", font=("Arial", 14, "bold"), fg="#007ACC", padx=20, pady=10).grid(row=row_index, column=0, columnspan=3, pady=10)
-
-    row_index += 1
-    Button(container, text="Modifier liste MARS titulaires", command=manage_mar_titulaires, width=40, bg="#007ACC", fg="black", font=("Arial", 10, "bold")).grid(row=row_index, column=0, columnspan=3, pady=5)
-
-    row_index += 1
-    Button(container, text="Modifier liste MARS remplaçants", command=manage_mar_remplacants, width=40, bg="#007ACC", fg="black", font=("Arial", 10, "bold")).grid(row=row_index, column=0, columnspan=3, pady=5)
-
-    row_index += 1
-    Button(container, text="Modifier liste IADE remplaçants", command=manage_iade_remplacants, width=40, bg="#007ACC", fg="black", font=("Arial", 10, "bold")).grid(row=row_index, column=0, columnspan=3, pady=5)
-
-    row_index += 1
-    Button(container, text="Modifier liste Salariés", command=manage_salaries, width=40, bg="#007ACC", fg="black", font=("Arial", 10, "bold")).grid(row=row_index, column=0, columnspan=3, pady=5)
-
-    row_index += 1
-    Button(container, text="Paramètres DocuSign", command=open_docusign_parameters, width=40, bg="#007ACC", fg="black", font=("Arial", 10, "bold")).grid(row=row_index, column=0, columnspan=3, pady=5)
-
-    # ✅ Boutons de validation bien positionnés
-    row_index += 2
-    buttons_frame = Frame(container)
-    buttons_frame.grid(row=row_index, column=0, columnspan=3, pady=15)
-
-    Button(buttons_frame, text="Retour", command=param_window.destroy, width=20, bg="#007ACC", fg="black", font=("Arial", 10, "bold")).pack(side="left", padx=10, pady=10)
-
-
+    ttk.Label(scrollable_frame, text="Identifiant bancaire :").grid(row=row_index, column=0, sticky="w", pady=5)
+    ttk.Entry(scrollable_frame, textvariable=bank_id_var, width=60).grid(row=row_index, column=1, pady=5)
+    
+    # Fonction pour sauvegarder les paramètres
     def save_parameters():
         """Sauvegarde les paramètres dans file_paths.json et config.json"""
         
@@ -233,19 +286,386 @@ def open_parameters():
             print("✅ Paramètres des fichiers sauvegardés avec succès.")
         except Exception as e:
             print(f"❌ Erreur lors de la sauvegarde des fichiers : {e}")
+            messagebox.showerror("Erreur", f"Impossible de sauvegarder les chemins des fichiers : {e}")
 
         try:
             # Sauvegarde des paramètres bancaires
             with open(config_file, "w") as f:
                 json.dump(config, f, indent=4)
             print("✅ Paramètres bancaires sauvegardés avec succès.")
+            
+            # Afficher un message de succès
+            messagebox.showinfo("Succès", "Les paramètres ont été sauvegardés avec succès.")
         except Exception as e:
             print(f"❌ Erreur lors de la sauvegarde des paramètres bancaires : {e}")
+            messagebox.showerror("Erreur", f"Impossible de sauvegarder les paramètres bancaires : {e}")
 
-        param_window.destroy()  # Ferme la fenêtre après l'enregistrement       
+    # Boutons de sauvegarde
+    buttons_frame = tk.Frame(container, bg="#f5f5f5")
+    buttons_frame.pack(fill="x", pady=10)
+    
+    tk.Button(buttons_frame, text="💾 Enregistrer", command=save_parameters, 
+             bg="#4caf50", fg="black", font=("Arial", 12, "bold")).pack(side="right", padx=10)
+
+
+# Fonctions pour afficher chaque type de paramètre dans le conteneur
+def display_mars_titulaires_in_container(container):
+    """Affiche la gestion des MARS titulaires dans le conteneur."""
+    # Vider le conteneur
+    for widget in container.winfo_children():
+        widget.destroy()
+    
+    # Créer un cadre pour la gestion des MARS titulaires
+    frame = tk.Frame(container, bg="#f5f5f5", padx=20, pady=20)
+    frame.pack(fill="both", expand=True)
+    
+    # Titre
+    tk.Label(frame, text="👨‍⚕️ Gestion des MARS titulaires", 
+             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    try:
+        # Chargement des données depuis la bonne feuille
+        mars_titulaires = pd.read_excel(file_paths["excel_mar"], sheet_name="MARS SELARL")
         
-    Button(buttons_frame, text="Enregistrer", command=save_parameters, width=20, bg="#007ACC", fg="black", font=("Arial", 10, "bold")).pack(side="right", padx=10, pady=10)
+        # Cadre principal
+        main_frame = tk.Frame(frame, bg="#f5f5f5")
+        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Créer une listbox pour afficher les MARS titulaires
+        listbox = tk.Listbox(main_frame, width=50, height=15, font=("Arial", 12))
+        listbox.pack(side="left", fill="both", expand=True, padx=5, pady=10)
+        
+        # Ajouter une scrollbar
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=listbox.yview)
+        scrollbar.pack(side="right", fill="y")
+        listbox.config(yscrollcommand=scrollbar.set)
+        
+        # Variable pour stocker les données
+        mars_data = []
+        
+        def refresh_listbox():
+            """Met à jour la liste des MARS affichée dans la Listbox."""
+            listbox.delete(0, tk.END)
+            mars_data.clear()
+            
+            for _, row in mars_titulaires.iterrows():
+                nom = row["NOM"] if not pd.isna(row["NOM"]) else ""
+                prenom = row["PRENOM"] if not pd.isna(row["PRENOM"]) else ""
+                full_name = f"{nom} {prenom}".strip()
+                mars_data.append(row)
+                listbox.insert(tk.END, full_name)
+        
+        # Remplir la listbox initialement
+        refresh_listbox()
+        
+        # Fonctions pour les boutons
+        def on_modify():
+            """Modifier un MAR titulaire."""
+            selected_index = listbox.curselection()
+            if not selected_index:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner un médecin.")
+                return
+            
+            selected_index = selected_index[0]
+            selected_row = mars_data[selected_index]
+            
+            # Créer une fenêtre de modification
+            modify_window = tk.Toplevel(container)
+            modify_window.title("Modifier un MAR titulaire")
+            modify_window.geometry("400x400")
+            modify_window.grab_set()  # Rendre la fenêtre modale
+            
+            # Variables pour les champs
+            nom_var = StringVar(value=selected_row["NOM"] if not pd.isna(selected_row["NOM"]) else "")
+            prenom_var = StringVar(value=selected_row["PRENOM"] if not pd.isna(selected_row["PRENOM"]) else "")
+            ordre_var = StringVar(value=selected_row["N ORDRE"] if not pd.isna(selected_row["N ORDRE"]) else "")
+            email_var = StringVar(value=selected_row["EMAIL"] if not pd.isna(selected_row["EMAIL"]) else "")
+            iban_var = StringVar(value=selected_row.get("IBAN", "") if not pd.isna(selected_row.get("IBAN", "")) else "")
+            
+            # Création des champs
+            padx, pady = 10, 5
+            row = 0
+            
+            ttk.Label(modify_window, text="Nom:").grid(row=row, column=0, sticky="w", padx=padx, pady=pady)
+            ttk.Entry(modify_window, textvariable=nom_var, width=30).grid(row=row, column=1, padx=padx, pady=pady)
+            row += 1
+            
+            ttk.Label(modify_window, text="Prénom:").grid(row=row, column=0, sticky="w", padx=padx, pady=pady)
+            ttk.Entry(modify_window, textvariable=prenom_var, width=30).grid(row=row, column=1, padx=padx, pady=pady)
+            row += 1
+            
+            ttk.Label(modify_window, text="N° Ordre:").grid(row=row, column=0, sticky="w", padx=padx, pady=pady)
+            ttk.Entry(modify_window, textvariable=ordre_var, width=30).grid(row=row, column=1, padx=padx, pady=pady)
+            row += 1
+            
+            ttk.Label(modify_window, text="Email:").grid(row=row, column=0, sticky="w", padx=padx, pady=pady)
+            ttk.Entry(modify_window, textvariable=email_var, width=30).grid(row=row, column=1, padx=padx, pady=pady)
+            row += 1
+            
+            ttk.Label(modify_window, text="IBAN:").grid(row=row, column=0, sticky="w", padx=padx, pady=pady)
+            ttk.Entry(modify_window, textvariable=iban_var, width=30).grid(row=row, column=1, padx=padx, pady=pady)
+            row += 1
+            
+            def save_changes():
+                """Enregistre les modifications et met à jour Excel."""
+                # Mise à jour des données
+                mars_titulaires.loc[selected_index, "NOM"] = nom_var.get()
+                mars_titulaires.loc[selected_index, "PRENOM"] = prenom_var.get()
+                mars_titulaires.loc[selected_index, "N ORDRE"] = ordre_var.get()
+                mars_titulaires.loc[selected_index, "EMAIL"] = email_var.get()
+                
+                # Ajouter IBAN s'il n'existe pas
+                if "IBAN" not in mars_titulaires.columns:
+                    mars_titulaires["IBAN"] = ""
+                mars_titulaires.loc[selected_index, "IBAN"] = iban_var.get()
+                
+                try:
+                    # Sauvegarde dans Excel
+                    save_excel_with_updated_sheet(file_paths["excel_mar"], "MARS SELARL", mars_titulaires)
+                    messagebox.showinfo("Succès", "Modifications enregistrées avec succès.")
+                    
+                    # Mise à jour de l'affichage
+                    refresh_listbox()
+                    modify_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Erreur", f"Erreur lors de la sauvegarde : {e}")
+            
+            # Boutons de validation
+            buttons_frame = tk.Frame(modify_window)
+            buttons_frame.grid(row=row, column=0, columnspan=2, pady=15)
+            
+            ttk.Button(buttons_frame, text="Enregistrer", command=save_changes).pack(side="left", padx=10)
+            ttk.Button(buttons_frame, text="Annuler", command=modify_window.destroy).pack(side="left", padx=10)
+        
+        def on_add():
+            """Ajouter un nouveau MAR titulaire."""
+            # Créer une fenêtre d'ajout
+            add_window = tk.Toplevel(container)
+            add_window.title("Ajouter un MAR titulaire")
+            add_window.geometry("400x400")
+            add_window.grab_set()  # Rendre la fenêtre modale
+            
+            # Variables pour les champs
+            nom_var = StringVar()
+            prenom_var = StringVar()
+            ordre_var = StringVar()
+            email_var = StringVar()
+            iban_var = StringVar()
+            
+            # Création des champs
+            padx, pady = 10, 5
+            row = 0
+            
+            ttk.Label(add_window, text="Nom:").grid(row=row, column=0, sticky="w", padx=padx, pady=pady)
+            ttk.Entry(add_window, textvariable=nom_var, width=30).grid(row=row, column=1, padx=padx, pady=pady)
+            row += 1
+            
+            ttk.Label(add_window, text="Prénom:").grid(row=row, column=0, sticky="w", padx=padx, pady=pady)
+            ttk.Entry(add_window, textvariable=prenom_var, width=30).grid(row=row, column=1, padx=padx, pady=pady)
+            row += 1
+            
+            ttk.Label(add_window, text="N° Ordre:").grid(row=row, column=0, sticky="w", padx=padx, pady=pady)
+            ttk.Entry(add_window, textvariable=ordre_var, width=30).grid(row=row, column=1, padx=padx, pady=pady)
+            row += 1
+            
+            ttk.Label(add_window, text="Email:").grid(row=row, column=0, sticky="w", padx=padx, pady=pady)
+            ttk.Entry(add_window, textvariable=email_var, width=30).grid(row=row, column=1, padx=padx, pady=pady)
+            row += 1
+            
+            ttk.Label(add_window, text="IBAN:").grid(row=row, column=0, sticky="w", padx=padx, pady=pady)
+            ttk.Entry(add_window, textvariable=iban_var, width=30).grid(row=row, column=1, padx=padx, pady=pady)
+            row += 1
+            
+            def save_new():
+                """Enregistre le nouveau MAR et met à jour Excel."""
+                # Vérification des champs obligatoires
+                if not nom_var.get().strip() or not prenom_var.get().strip():
+                    messagebox.showwarning("Attention", "Veuillez renseigner au moins le nom et le prénom.")
+                    return
+                
+                # Préparation des nouvelles données
+                new_row = {
+                    "NOM": nom_var.get(),
+                    "PRENOM": prenom_var.get(),
+                    "N ORDRE": ordre_var.get(),
+                    "EMAIL": email_var.get()
+                }
+                
+                # Ajouter IBAN s'il n'existe pas
+                if "IBAN" not in mars_titulaires.columns:
+                    mars_titulaires["IBAN"] = ""
+                new_row["IBAN"] = iban_var.get()
+                
+                try:
+                    # Ajout au DataFrame
+                    mars_titulaires.loc[len(mars_titulaires)] = new_row
+                    
+                    # Sauvegarde dans Excel
+                    save_excel_with_updated_sheet(file_paths["excel_mar"], "MARS SELARL", mars_titulaires)
+                    messagebox.showinfo("Succès", "MAR titulaire ajouté avec succès.")
+                    
+                    # Mise à jour de l'affichage
+                    refresh_listbox()
+                    add_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Erreur", f"Erreur lors de l'ajout : {e}")
+            
+            # Boutons de validation
+            buttons_frame = tk.Frame(add_window)
+            buttons_frame.grid(row=row, column=0, columnspan=2, pady=15)
+            
+            ttk.Button(buttons_frame, text="Ajouter", command=save_new).pack(side="left", padx=10)
+            ttk.Button(buttons_frame, text="Annuler", command=add_window.destroy).pack(side="left", padx=10)
+        
+        def on_delete():
+            """Supprimer un MAR titulaire."""
+            selected_index = listbox.curselection()
+            if not selected_index:
+                messagebox.showwarning("Avertissement", "Veuillez sélectionner un médecin.")
+                return
+            
+            selected_index = selected_index[0]
+            selected_row = mars_data[selected_index]
+            
+            # Confirmation de suppression
+            nom = selected_row["NOM"] if not pd.isna(selected_row["NOM"]) else ""
+            prenom = selected_row["PRENOM"] if not pd.isna(selected_row["PRENOM"]) else ""
+            full_name = f"{nom} {prenom}".strip()
+            
+            if messagebox.askyesno("Confirmation", f"Voulez-vous vraiment supprimer {full_name} ?"):
+                try:
+                    # Suppression de la ligne
+                    mars_titulaires.drop(mars_titulaires.index[selected_index], inplace=True)
+                    mars_titulaires.reset_index(drop=True, inplace=True)
+                    
+                    # Sauvegarde dans Excel
+                    save_excel_with_updated_sheet(file_paths["excel_mar"], "MARS SELARL", mars_titulaires)
+                    messagebox.showinfo("Succès", f"{full_name} supprimé avec succès.")
+                    
+                    # Mise à jour de l'affichage
+                    refresh_listbox()
+                except Exception as e:
+                    messagebox.showerror("Erreur", f"Erreur lors de la suppression : {e}")
+        
+        # Boutons d'action
+        buttons_frame = tk.Frame(frame, bg="#f5f5f5")
+        buttons_frame.pack(pady=10)
+        
+        tk.Button(buttons_frame, text="➕ Ajouter", command=on_add, 
+                 bg="#4caf50", fg="black", font=("Arial", 10, "bold")).pack(side="left", padx=10)
+        tk.Button(buttons_frame, text="✏️ Modifier", command=on_modify, 
+                 bg="#2196f3", fg="black", font=("Arial", 10, "bold")).pack(side="left", padx=10)
+        tk.Button(buttons_frame, text="🗑️ Supprimer", command=on_delete, 
+                 bg="#f44336", fg="black", font=("Arial", 10, "bold")).pack(side="left", padx=10)
+    
+    except Exception as e:
+        tk.Label(frame, text=f"Erreur lors du chargement des données : {e}", 
+                fg="red", bg="#f5f5f5", wraplength=600).pack(pady=20)
 
+
+def display_mars_remplacants_in_container(container):
+    """Affiche la gestion des MARS remplaçants dans le conteneur."""
+    # Vider le conteneur
+    for widget in container.winfo_children():
+        widget.destroy()
+    
+    # Créer un cadre pour la gestion des MARS remplaçants
+    frame = tk.Frame(container, bg="#f5f5f5")
+    frame.pack(fill="both", expand=True)
+    
+    # Titre
+    tk.Label(frame, text="🩺 Gestion des MARS remplaçants", 
+             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    # Adaptez ici le contenu de votre fonction manage_mar_remplacants
+
+
+def display_iade_remplacants_in_container(container):
+    """Affiche la gestion des IADE remplaçants dans le conteneur."""
+    # Vider le conteneur
+    for widget in container.winfo_children():
+        widget.destroy()
+    
+    # Créer un cadre pour la gestion des IADE remplaçants
+    frame = tk.Frame(container, bg="#f5f5f5")
+    frame.pack(fill="both", expand=True)
+    
+    # Titre
+    tk.Label(frame, text="💉 Gestion des IADE remplaçants", 
+             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    # Adaptez ici le contenu de votre fonction manage_iade_remplacants
+
+
+def display_salaries_in_container(container):
+    """Affiche la gestion des salariés dans le conteneur."""
+    # Vider le conteneur
+    for widget in container.winfo_children():
+        widget.destroy()
+    
+    # Créer un cadre pour la gestion des salariés
+    frame = tk.Frame(container, bg="#f5f5f5")
+    frame.pack(fill="both", expand=True)
+    
+    # Titre
+    tk.Label(frame, text="👥 Gestion des salariés", 
+             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    # Adaptez ici le contenu de votre fonction manage_salaries
+
+
+def display_docusign_in_container(container):
+    """Affiche les paramètres DocuSign dans le conteneur."""
+    # Vider le conteneur
+    for widget in container.winfo_children():
+        widget.destroy()
+    
+    # Créer un cadre pour les paramètres DocuSign
+    frame = tk.Frame(container, bg="#f5f5f5")
+    frame.pack(fill="both", expand=True)
+    
+    # Titre
+    tk.Label(frame, text="📝 Paramètres DocuSign", 
+             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    # Charger les identifiants depuis config.json
+    config_file = "config.json"
+    if not os.path.exists(config_file):
+        config = {"docusign_login_page": "https://account.docusign.com", "docusign_email": "", "docusign_password": ""}
+    else:
+        with open(config_file, "r") as f:
+            config = json.load(f)   
+    
+    # Variables pour stocker les entrées
+    login_page_var = StringVar(value=config.get("docusign_login_page", "https://account.docusign.com"))
+    email_var = StringVar(value=config.get("docusign_email", ""))
+    password_var = StringVar(value=config.get("docusign_password", ""))
+    
+    # Création des champs
+    tk.Label(frame, text="Page de login DocuSign :").pack(pady=5)
+    tk.Entry(frame, textvariable=login_page_var, width=50).pack(pady=5)
+    
+    tk.Label(frame, text="Email DocuSign :").pack(pady=5)
+    tk.Entry(frame, textvariable=email_var, width=50).pack(pady=5)
+    
+    tk.Label(frame, text="Mot de passe (laisser vide si non stocké) :").pack(pady=5)
+    tk.Entry(frame, textvariable=password_var, width=50, show="*").pack(pady=5)
+    
+    # Fonction pour sauvegarder
+    def save_docusign_settings():
+        config["docusign_login_page"] = login_page_var.get()
+        config["docusign_email"] = email_var.get()
+        config["docusign_password"] = password_var.get()
+        
+        with open(config_file, "w") as f:
+            json.dump(config, f, indent=4)
+        
+        messagebox.showinfo("Succès", "Paramètres DocuSign enregistrés.")
+    
+    # Bouton de sauvegarde
+    tk.Button(frame, text="💾 Enregistrer", command=save_docusign_settings,
+             bg="#4caf50", fg="black", font=("Arial", 12, "bold")).pack(pady=20)    
+    
         
 def open_docusign_parameters():
     """Fenêtre pour modifier les identifiants DocuSign et les enregistrer dans un fichier JSON."""
@@ -2029,12 +2449,11 @@ def display_bulletins_in_container(container):
     bulletins_frame = tk.Frame(container, bg="#f0f0f0")
     bulletins_frame.pack(fill="both", expand=True)
     
-    # Stocker ce cadre dans une variable globale pour que show_bulletins puisse l'utiliser
-    global current_frame
-    current_frame = bulletins_frame
+    # Importer la fonction du module bulletins
+    from bulletins import show_bulletins_in_frame
     
-    # Appeler la fonction existante pour afficher les bulletins
-    show_bulletins()
+    # Appeler la fonction avec le cadre créé
+    show_bulletins_in_frame(bulletins_frame)
 
 
 def display_factures_in_container(container):
