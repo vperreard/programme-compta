@@ -1966,81 +1966,33 @@ def open_contract_creation_mar():
            font=("Arial", 10), bg="#f44336", fg="black").grid(row=7, column=1, pady=10, padx=5, sticky="w")
     
 def open_accounting_menu():
-    """Affiche le menu de gestion comptable dans le panneau droit."""
-    global right_frame  # Utiliser le panneau droit global
-    
-    # Nettoyer le contenu existant du panneau droit
-    for widget in right_frame.winfo_children():
-        widget.destroy()
-    
-    # Créer un cadre pour contenir tous les éléments du menu comptabilité
-    compta_frame = tk.Frame(right_frame, padx=20, pady=20, bg="#f2f7ff")
-    compta_frame.pack(fill="both", expand=True)
-    
-    # Titre
-    tk.Label(compta_frame, text="📊 Menu Comptabilité", font=("Arial", 14, "bold"), 
-             bg="#4a90e2", fg="white").pack(fill="x", pady=10)
-    
-    # Boutons avec les mêmes fonctionnalités qu'avant
-    tk.Button(compta_frame, text="📄 Bulletins de salaire", 
-              command=lambda: display_in_right_frame(show_bulletins),
-              width=30, bg="#DDDDDD", fg="black", 
-              font=("Arial", 10, "bold")).pack(pady=10)
-    
-    tk.Button(compta_frame, text="📂 Frais et factures", 
-              command=launch_facture_analysis, 
-              width=30, bg="#DDDDDD", fg="black", 
-              font=("Arial", 10, "bold")).pack(pady=10)
-    
-    tk.Button(compta_frame, text="💰 Effectuer un virement", 
-              command=open_transfer_menu, 
-              width=30, bg="#DDDDDD", fg="black", 
-              font=("Arial", 10, "bold")).pack(pady=10)
-    
-    tk.Button(compta_frame, text="💰 Virement rémunération MARS", 
-              command=open_virement_mar,
-              width=30, bg="#DDDDDD", fg="black", 
-              font=("Arial", 10, "bold")).pack(pady=10)
-    
-    # Retour au menu principal
-    tk.Button(compta_frame, text="🔙 Retour au menu principal", 
-              command=show_main_menu, 
-              width=30, bg="#BBBBBB", fg="black", 
-              font=("Arial", 10, "bold")).pack(pady=10)
+    """Ouvre la fenêtre de gestion comptable."""
+    compta_window = tk.Toplevel()
+    compta_window.title("📊 Gestion Comptabilité")
+    compta_window.geometry("400x350")  # Augmenté en hauteur pour le nouveau bouton
+    compta_window.configure(bg="#f2f7ff")
+
+    # 📌 Titre
+    tk.Label(compta_window, text="📊 Menu Comptabilité", font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+
+    # 📄 Accès aux bulletins de salaire
+    tk.Button(compta_window, text="📄 Bulletins de salaire", command=show_bulletins, width=30, bg="#DDDDDD", fg="black", font=("Arial", 10, "bold")).pack(pady=10)
+
+    # 📂 Accès aux frais et factures
+    tk.Button(compta_window, text="📂 Frais et factures", command=launch_facture_analysis, width=30, bg="#DDDDDD", fg="black", font=("Arial", 10, "bold")).pack(pady=10)
+
+    # 💰 Effectuer un virement
+    tk.Button(compta_window, text="💰 Effectuer un virement", command=open_transfer_menu, width=30, bg="#DDDDDD", fg="black", font=("Arial", 10, "bold")).pack(pady=10)
+
+    # 💰 Virement rémunération MARS (NOUVEAU BOUTON)
+    tk.Button(
+        compta_window, text="💰 Virement rémunération MARS", command=open_virement_mar,
+        width=30, bg="#DDDDDD", fg="black", font=("Arial", 10, "bold")
+    ).pack(pady=10)
+    # 🔙 Bouton Retour
+    tk.Button(compta_window, text="🔙 Retour", command=compta_window.destroy, width=30, bg="#BBBBBB", fg="black", font=("Arial", 10, "bold")).pack(pady=10)
 
 
-def display_in_right_frame(function_to_display):
-    """Fonction helper pour afficher une fonction dans le panneau droit"""
-    global right_frame
-    
-    # On sauvegarde la fonction originale
-    original_function = function_to_display
-    
-    # On définit une nouvelle fonction qui va intercepter la fenêtre toplevel
-    def wrapped_function(*args, **kwargs):
-        # Nettoyer le panneau droit
-        for widget in right_frame.winfo_children():
-            widget.destroy()
-        
-        # Créer un cadre spécial qui va servir de "fausse fenêtre Toplevel"
-        # pour la fonction d'origine
-        fake_toplevel_frame = tk.Frame(right_frame, bg="#f0f0f0")
-        fake_toplevel_frame.pack(fill="both", expand=True)
-        
-        # Stocke le cadre actuel pour les fonctions qui supposent être dans une fenêtre Toplevel
-        original_function.__globals__['current_frame'] = fake_toplevel_frame
-        
-        # Appeler la fonction d'origine mais rediriger ses widgets dans notre cadre
-        original_function(*args, **kwargs)
-        
-        # Ajouter un bouton de retour au menu comptabilité
-        tk.Button(fake_toplevel_frame, text="🔙 Retour au menu comptabilité", 
-                  command=open_accounting_menu, 
-                  bg="#B0C4DE", fg="black", 
-                  font=("Arial", 10, "bold")).pack(pady=10)
-    
-    # Exécuter notre fonction wrapper
-    wrapped_function()
 
 def launch_facture_analysis():
     """Lance le script analyse_facture.py pour traiter les factures."""

@@ -514,19 +514,29 @@ def open_pdf_at_page(file_path, page_num):
 
 # 📌 Interface principale pour afficher les bulletins
 def show_bulletins():
-    """Affiche l'interface principale avec les bulletins triés par année/mois"""
-    window = tk.Toplevel()
-    window.title("📄 Bulletins de Salaire")
-    window.geometry("700x850")
-    window.focus_force()  # Met la fenêtre au premier plan
-    window.transient()  # La rattache à la fenêtre principale pour éviter qu’elle disparaisse en arrière-plan
+    """Affiche l'interface des bulletins triés par année/mois dans le frame fourni"""
+    # On utilise une variable globale fournie par display_in_right_frame
+    # ou on crée une fenêtre Toplevel si appelé directement
+    try:
+        # Si on est appelé via display_in_right_frame
+        window = current_frame
+    except NameError:
+        # Si on est appelé directement (comportement original)
+        window = tk.Toplevel()
+        window.title("📄 Bulletins de Salaire")
+        window.geometry("700x850")
+        window.focus_force()  # Met la fenêtre au premier plan
+        window.transient()  # La rattache à la fenêtre principale
 
     window.config(bg="#f0f0f0")
 
     # ✅ Bouton pour recharger les bulletins
     reload_button = tk.Button(
         window, text="🔄 Recharger les bulletins",
-        command=lambda: [update_cache(force_reload=True), window.destroy(), show_bulletins()],
+        command=lambda: [update_cache(force_reload=True), 
+                        # Si on est dans une fenêtre Toplevel, on la détruit et en recrée une
+                        window.destroy() if isinstance(window, tk.Toplevel) else None,
+                        show_bulletins()],
         bg="#FFA500", fg="black", font=("Arial", 12, "bold")
     )
     reload_button.pack(pady=5)
@@ -539,13 +549,14 @@ def show_bulletins():
     )
     scan_pdf_button.pack(pady=5)
 
-    # ✅ Bouton Retour
-    retour_button = tk.Button(
-        window, text="🔙 Retour",
-        command=window.destroy,
-        bg="#B0C4DE", fg="black", font=("Arial", 12, "bold")
-    )
-    retour_button.pack(pady=10)
+    # ✅ Bouton Retour - seulement si on est dans une Toplevel
+    if isinstance(window, tk.Toplevel):
+        retour_button = tk.Button(
+            window, text="🔙 Retour",
+            command=window.destroy,
+            bg="#B0C4DE", fg="black", font=("Arial", 12, "bold")
+        )
+        retour_button.pack(pady=10)
 
     # ✅ Titre
     title_label = tk.Label(window, text="📄 Sélectionnez un mois", font=("Arial", 14, "bold"), bg="#f0f0f0")
@@ -555,8 +566,12 @@ def show_bulletins():
     frame_grille = tk.Frame(window, bg="#f0f0f0")
     frame_grille.pack()
 
+    # Assurez-vous que le cache est chargé
+    if not bulletins_cache:
+        update_cache()
+
     # 🔹 Affichage des années en haut
-    annees = sorted(bulletins_cache.keys())
+    annees = sorted(bulletins_cache.keys()) if bulletins_cache else []
     for col_idx, annee in enumerate(annees):
         tk.Label(frame_grille, text=annee, font=("Arial", 12, "bold"), bg="#f0f0f0").grid(row=0, column=col_idx + 1, padx=20, pady=5)
 
@@ -569,10 +584,12 @@ def show_bulletins():
         for col_idx, annee in enumerate(annees):
             if mois in bulletins_cache.get(annee, {}):
                 tk.Button(frame_grille, text=mois, width=12, height=2,
-                          command=lambda a=annee, m=mois: show_details(a, m),
+                          command=lambda a=annee, m=mois: show_details(a, m, window),
                           bg="#87CEEB", fg="black", font=("Arial", 10, "bold")).grid(row=row_idx, column=col_idx + 1, padx=5, pady=5)
 
-    window.mainloop()
+    # Si c'est une fenêtre Toplevel, on lance la boucle mainloop
+    if isinstance(window, tk.Toplevel):
+        window.mainloop()
 
 def scan_new_pdf():
     """Ouvre l'explorateur de fichiers pour sélectionner un PDF à scanner sans rescanner tout le cache."""
@@ -615,11 +632,21 @@ def scan_new_pdf():
     # Rafraîchir l'affichage de la fenêtre des bulletins
     show_bulletins()
 
-def show_details(annee, mois):
+def show_details(annee, mois, parent_window=None):
     """Affiche les détails des bulletins d'un mois sélectionné"""
-    window = tk.Toplevel()
-    window.title(f"📄 Bulletins de {mois} {annee}")
-    window.geometry("900x500")
+    # Nettoyer la fenêtre parent si elle est fournie
+    if parent_window and not isinstance(parent_window, tk.Toplevel):
+        for widget in parent_window.winfo_children():
+            widget.destroy()
+        window = parent_window
+    else:
+        window = tk.Toplevel()
+        window.title(f"📄 Bulletins de {mois} {annee}")
+        window.geometry("900x500")
+
+    # Titre
+    tk.Label(window, text=f"📄 Bulletins de {mois} {annee}", 
+             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x")
 
     columns = ("Nom", "Prénom", "Date", "Brut", "NetAvantImpot", "NetApresImpot", "Fichier", "Page")
     tree = ttk.Treeview(window, columns=columns, show="headings", selectmode="extended")
@@ -641,7 +668,6 @@ def show_details(annee, mois):
             bulletin["Page"]
         ))
     tree.pack(expand=True, fill="both", padx=10, pady=10)
-
 
     def open_selected():
         """Ouvre le fichier PDF du bulletin sélectionné à la page correcte"""
@@ -671,8 +697,7 @@ def show_details(annee, mois):
         # Ouvrir le PDF à la bonne page avec PDF Expert
         open_pdf_at_page(file_path, page_num)
 
-    tree.pack(expand=True, fill="both", padx=10, pady=10)
-        # Ajouter un bouton pour afficher le bulletin en PDF Expert
+    # Ajouter un bouton pour afficher le bulletin en PDF Expert
     show_contract_button = tk.Button(
         window, text="📂 Afficher le bulletin",
         command=open_selected,
@@ -680,19 +705,30 @@ def show_details(annee, mois):
     )
     show_contract_button.pack(pady=10)
     
-        # Bouton "Faire virement" : il utilisera les bulletins sélectionnés dans le Treeview
+    # Bouton "Faire virement" : il utilisera les bulletins sélectionnés dans le Treeview
     tk.Button(window, text="Faire virement", command=lambda: open_virement_window(tree),
               bg="#32CD32", fg="black", font=("Arial", 12, "bold")).pack(pady=10)
     
-    # 🔙 Bouton Retour (ferme la fenêtre)
-    retour_button = tk.Button(
-        window, text="🔙 Retour",
-        command=window.destroy,
-        bg="#B0C4DE", fg="black", font=("Arial", 12, "bold")
-    )
+    # 🔙 Bouton Retour - comportement différent selon le contexte
+    if isinstance(window, tk.Toplevel):
+        # Si c'est une fenêtre Toplevel, retour = fermer la fenêtre
+        retour_button = tk.Button(
+            window, text="🔙 Retour",
+            command=window.destroy,
+            bg="#B0C4DE", fg="black", font=("Arial", 12, "bold")
+        )
+    else:
+        # Si c'est dans le right_frame, retour = afficher les bulletins
+        retour_button = tk.Button(
+            window, text="🔙 Retour aux bulletins",
+            command=lambda: show_bulletins(),
+            bg="#B0C4DE", fg="black", font=("Arial", 12, "bold")
+        )
     retour_button.pack(pady=10)
 
-    window.mainloop()    
+    # Si c'est une fenêtre Toplevel, lancer la boucle mainloop
+    if isinstance(window, tk.Toplevel):
+        window.mainloop()
 
 # 🔹 Exécuter l'interface avec mise à jour du cache
 if __name__ == "__main__":
