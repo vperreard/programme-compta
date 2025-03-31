@@ -1,0 +1,244 @@
+Received: from DB8PR08MB5514.eurprd08.prod.outlook.com (2603:10a6:10:fa::9) by
+ DU0PR08MB9001.eurprd08.prod.outlook.com with HTTPS; Tue, 12 Sep 2023 13:05:08
+ +0000
+Received: from FR0P281CA0193.DEUP281.PROD.OUTLOOK.COM (2603:10a6:d10:ab::19)
+ by DB8PR08MB5514.eurprd08.prod.outlook.com (2603:10a6:10:fa::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6768.35; Tue, 12 Sep
+ 2023 13:05:07 +0000
+Received: from VI1EUR06FT061.eop-eur06.prod.protection.outlook.com
+ (2603:10a6:d10:ab:cafe::93) by FR0P281CA0193.outlook.office365.com
+ (2603:10a6:d10:ab::19) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6792.17 via Frontend
+ Transport; Tue, 12 Sep 2023 13:05:07 +0000
+Authentication-Results: spf=pass (sender IP is 64.207.219.71)
+ smtp.mailfrom=docusign.net; dkim=pass (signature was verified)
+ header.d=docusign.net;dmarc=pass action=none
+ header.from=docusign.net;compauth=pass reason=100
+Received-SPF: Pass (protection.outlook.com: domain of docusign.net designates
+ 64.207.219.71 as permitted sender) receiver=protection.outlook.com;
+ client-ip=64.207.219.71; helo=mailch.docusign.net; pr=C
+Received: from mailch.docusign.net (64.207.219.71) by
+ VI1EUR06FT061.mail.protection.outlook.com (10.13.6.101) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6792.19 via Frontend Transport; Tue, 12 Sep 2023 13:05:07 +0000
+X-IncomingTopHeaderMarker:
+ OriginalChecksum:5E6A58754E64B01D5D527515D538CC82E0044DA12F2B7AE42D5E13DBB51A8F23;UpperCasedChecksum:8F369C4E77BF7434D40A915811683CB9C5759A992AA159280321D53F4175AC39;SizeAsReceived:1558;Count:17
+Received: from CH3FE90.corp.docusign.net (unknown [10.102.101.12])
+	by mailch.docusign.net (Postfix) with ESMTP id 3A0198012811
+	for <vincent.perreard@outlook.fr>; Tue, 12 Sep 2023 13:05:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=docusign.net;
+	s=mail1; t=1694523906;
+	bh=yk7cctWFPD/eVq1aHjzmET9tl1hZx6JVI+9iK/XdM2s=; h=From;
+	b=STp4+FasEYpCfJDH6uc/TfKjzmUginPdoT2JRHx88JCnpkEWv+DUMtcwUUnMMO8Nc
+	 +l3l5fAMnNJheTYcLL0aC1w4peJ0oEFT1/7qYX/UIfVoBZl1M1mPRJNsCKKHRjJUXI
+	 hpOb2x7VTx877Pjb4cSHnmE6TI4aiwH5nt8/sOjUfG1D5ztEqbnOinN/lz9HGr3zeM
+	 SM8YKbLgqRWpy0BAFs6B42e/gJHiX8p3kQmUSIy2v88f7Llfmo7brwiqZlitTntAqw
+	 gapAQKwOpbtMVVVC1gBAqTSQGFweb7BXJan2pWUT1oJ6LgZtuYAkdPG1UHsI1S6o/3
+	 ovE272kLozqdQ==
+Received: from CH3FE90 ([127.0.0.1]) by CH3FE90.corp.docusign.net with Microsoft SMTPSVC(10.0.17763.1697);
+	 Tue, 12 Sep 2023 06:05:05 -0700
+From: DocuSign Order Confirmation <orders@docusign.net>
+Date: Tue, 12 Sep 2023 06:05:04 -0700
+Subject: Order Confirmation
+Message-Id: <QID0RE6WYKU4.HEZGW165Y4NP3@ch3fe90>
+Reply-To: DocuSign Order Confirmation <no-reply@docusign.com>
+Sender: DocuSign Order Confirmation <orders@docusign.net>
+X-Notif-Svc: c3afa97b-e04e-45dc-a13a-bed9a1d10cce@NA.notifications.docusign.net
+X-Notif-Svc-Client: d13a9f86-35b6-41bd-a188-5ed3a86e3c79
+X-Return-Path: orders@docusign.net
+X-SiteName: na2
+To: Perreard Vincent <vincent.perreard@outlook.fr>
+Content-Type: text/html; charset=utf-8
+X-OriginalArrivalTime: 12 Sep 2023 13:05:05.0733 (UTC) FILETIME=[BFE3EF50:01D9E579]
+X-IncomingHeaderCount: 17
+Return-Path: orders@docusign.net
+X-MS-Exchange-Organization-ExpirationStartTime: 12 Sep 2023 13:05:07.7126
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id:
+ b2dc3488-2eb9-4889-0025-08dbb390e389
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic:
+ VI1EUR06FT061:EE_|DB8PR08MB5514:EE_|DU0PR08MB9001:EE_
+X-MS-Exchange-Organization-AuthSource:
+ VI1EUR06FT061.eop-eur06.prod.protection.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-UserLastLogonTime: 9/12/2023 1:02:48 PM
+X-MS-Office365-Filtering-Correlation-Id: b2dc3488-2eb9-4889-0025-08dbb390e389
+X-MS-Exchange-EOPDirect: true
+X-Sender-IP: 64.207.219.71
+X-SID-PRA: ORDERS@DOCUSIGN.NET
+X-SID-Result: PASS
+X-MS-Exchange-Organization-PCL: 2
+X-MS-Exchange-AtpMessageProperties: SA|SL
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Sep 2023 13:05:07.5720
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: b2dc3488-2eb9-4889-0025-08dbb390e389
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-AuthSource:
+ VI1EUR06FT061.eop-eur06.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+ 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB8PR08MB5514
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:01.1176097
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.6768.024
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:1;jmr:0;ex:0;auth:1;dest:C;OFR:CustomRules;ENG:(5062000305)(920221119095)(90000117)(920221120095)(90005022)(91005020)(91035115)(9050020)(9100341)(944500132)(2008001134)(2008121020)(4810010)(4910033)(9575002)(10195002)(9320005)(120001)(1110079);
+X-Message-Info:
+	qZelhIiYnPlLxDN3nws+ZNie/DwNfXgHPCS3tzDeXzUEnbj84Lv42iAIz2Xf5ZUIyMUBEBMP/WWlawa1uNpxtzg65u2qfWRsbF6XuFU2hEWzB09ApzGCuCj7tDIXXATNBoEwcUoL8aFUthFY3KaHn3JI8AtPze5DNBPSErTnDj2ZjYb71MkwHs4xz3YxoAsyQPd4DzTYecf/f23FfQ9e4A==
+X-Message-Delivery: Vj0xLjE7dXM9MDtsPTA7YT0xO0Q9MTtHRD0xO1NDTD0z
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?JsfAuh9Oa1bjvvFeaFEunQiWRa3nKZaqOLte2vl0ty6bZTvmFwEVYr3cfoj7?=
+ =?us-ascii?Q?RZCkwaDToc9iwjIrYEalU5musWpMDn4qTclUTjCS/cWDK6oucPWwtEXUARq3?=
+ =?us-ascii?Q?qvpmzygx3yqnUGPhOkHTSOZW3Q1JBMye82f/JOEDfeslXHGAkms9liHpl5uR?=
+ =?us-ascii?Q?0Pa9aeQeRAWRsqVI73zCYAqCmavMsqiiABB6U5CUgTwjs3gvN0WhZpAqCwD+?=
+ =?us-ascii?Q?qsf+LVLAQ59vUQD8UbFibumfrJQdLQGHXxWu/e6fHsTQaUSTbrXyeN+JUnuT?=
+ =?us-ascii?Q?Rjm4rqsEMLLByYev/PK5d743iC33E6rh/26NRJc1PJ8IMqa7z7+aM6aNg25U?=
+ =?us-ascii?Q?M+QK5EPZGPmZf2GZByINfwvwY04hxBz1NcBEIAtZ9Gow2xQJWAP5N3Z5mZ1c?=
+ =?us-ascii?Q?mKWfVqrtSv6gjLdjEhnUHJjpTTk826H+kIAfSLmnOegfpdDMNjgYtShcqdVO?=
+ =?us-ascii?Q?KUhcMA6XCuEonIGQ46gEW/aR+7AYx3alVc8DRN3/vgipSl6kld+BrAlxv/qV?=
+ =?us-ascii?Q?kgvzEWY1oPKTYhGHVX9bfMufcGRJ00CyvIXhrP3CW84j+X8qUpdmDYZNEoJa?=
+ =?us-ascii?Q?ouNT9pNZufXJwgUmMsUZ421QOwZRUYqTI5x9m7Gji/hymqyWUON/ujikDmg3?=
+ =?us-ascii?Q?MXHlFuPNrEVE4BUF6DO1/BvqIk50ZaqQXvjcjIB3ziOvoe+3V5seHzy1V5rL?=
+ =?us-ascii?Q?Eybl2dqfVhEPxE63hcMus66Jh8Iwxqdn9H+AfdMfzThXUsOfM5nk8jNh7wuM?=
+ =?us-ascii?Q?q5Z3qBXLGgK//lDwFS18YmtMszOS2QPI6OK2BTQJVn5VDOUmGFW9sESo/ne2?=
+ =?us-ascii?Q?kvY/wfQ+1AExvoYfsT5fxA4TOczProhsgJBKOj96FcXcUfcBnPZfgWQSKNGZ?=
+ =?us-ascii?Q?dwBLLbAgJtEH4JesZcjeCz9QMijanWw6uPdQ+KOn0lt7GWDM8/eSVvS5eiGu?=
+ =?us-ascii?Q?K5+hYpygd0L6zuCEuwrv9d7J46+hg2LoPejaHaumhhi1IVzm9WjBMuk5bzS0?=
+ =?us-ascii?Q?QH6DoEarbEZ0FlNSr7iA0Oh/9CX++wACvM4nJRFZbs53cjRKWfjbgQfpEFLt?=
+ =?us-ascii?Q?ZIWgozQMOjwjMN8ddldLLq/wN3NatmEMJ0QzWfJKUPPx2/+afu5+Iy4V8iLM?=
+ =?us-ascii?Q?Kwh8pytiBc25f/JQ/KMiXE0AkDuS/nN5RqH6IBBqoEBa4mydcP/gDVdnDQ1B?=
+ =?us-ascii?Q?yWriRI9DlajNYXRCjNtjLub1wLgYazUBHg0aWKvri+z5kfezUTOqM26YFJ0r?=
+ =?us-ascii?Q?xE3eU3tWHoqeiNrzlAkoHTc05yy4BLUxoVNtvzlP9E2KY54PbJ8gy6qzQRDJ?=
+ =?us-ascii?Q?v5BfZaXcvVA4VobgOZwzkgT+UsKUG/2MQ1ZLzx1w5V8PEhRh8S9hc279Kwxi?=
+ =?us-ascii?Q?NaYX0jwRt2LGbyzKbgWAraa3z4GoGShR6tYKRknlS2C49E2vTz3WFgUYqkJL?=
+ =?us-ascii?Q?z6vrdmCClxCJuTH5cA3PMXPc+2HILJ53COrkNKMEw59FV1O4vuc43tB4C6Wr?=
+ =?us-ascii?Q?evl/phB1i7Eqf81wjEkn/2F8BH91BMCeQT24C1VSP4i3FI6UHrxvmnqNKr53?=
+ =?us-ascii?Q?63N+k8NW7UVc0HkbrSBmnIW217m586tQABBqw26kcv4LBSwG9nFiq/2SOj0g?=
+ =?us-ascii?Q?ELccE+LMGaKFVOHOyWZaxPIgiGTnfP82aYys+2di/onNm8ycthz73PlIwqm2?=
+ =?us-ascii?Q?EAuTIQ=3D=3D?=
+MIME-Version: 1.0
+
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<body><table cellpadding="0" cellspacing="0" width="100%" style="background-color:#f7f6f7;border:0;border-collapse:collapse;border-spacing:0;font-family:Helvetica, Arial, sans-serif;font-size:16px;line-height:1.5;color:rgba(25, 24, 35, 0.9);width:100%"><tbody><tr><td style="padding:2%"><table cellpadding="0" cellspacing="0" width="100%" style="background-color:#ffffff;margin:0 auto;max-width:640px;border:0;border-collapse:collapse;border-spacing:0;font-family:Helvetica, Arial, sans-serif;font-size:16px;line-height:1.5;color:rgba(25, 24, 35, 0.9);width:100%"><tbody><tr><td>
+    <div style="padding:40px"><img style="display:block;height:40px" src="https://docucdn-a.akamaihd.net/olive/images/2.43.0/logo-docusign-sans-black.png" alt="DocuSign Logo"></div>
+    <table cellpadding="0" cellspacing="0" width="100%" style="border:0;border-collapse:collapse;border-spacing:0;font-family:Helvetica, Arial, sans-serif;font-size:16px;line-height:1.5;color:rgba(25, 24, 35, 0.9);width:100%"><tbody><tr><td style="padding:0 40px 40px 40px">
+        <div style="font-size:40px;font-weight:700;line-height:1.25">
+            Thank you for your order
+        </div>
+        <div style="font-size:20px;line-height:1.5;padding:16px 0 0 0">
+            Experience faster, more secure agreements from almost anywhere. It's a dotted line, but way better.
+        </div>
+        <table cellpadding="0" cellspacing="0" width="100%" style="margin:40px 0 0 0;border:0;border-collapse:collapse;border-spacing:0;font-family:Helvetica, Arial, sans-serif;font-size:16px;line-height:1.5;color:rgba(25, 24, 35, 0.9);width:100%"><tbody><tr><td><div style="border:1px solid rgba(25, 24, 35, 0.09);border-radius:4px;padding:24px"><table width="100%" style="border-collapse:collapse">
+            <tr>
+                <td colspan="2" style="text-align:right;font-size:14px;line-height:18px">
+                    9/11/2023
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="font-size:32px;font-weight:700;line-height:1.25">
+                    Order Confirmation
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="padding-top:24px;padding-bottom:24px;line-height:1.5">
+                    <b>Perreard Vincent</b><br>
+                    vincent.perreard@outlook.fr<br>
+                    Account ID #589664341<br>
+                </td>
+            </tr>
+            <tr style="border-top:1px solid rgba(25, 24, 35, 0.09)">
+                <td colspan="2" style="padding-top:24px;padding-bottom:24px">
+                    <div style="font-size:12px;font-weight:700;line-height:1.5">DocuSign eSignature</div>
+                    <div style="font-size:24px;font-weight:700;padding-top:4px;line-height:1.25">Standard</div>
+                </td>
+            </tr>
+            <tr style="border-top:1px solid rgba(25, 24, 35, 0.09)">
+                <td style="padding-top:24px;padding-bottom:16px;line-height:1.5">
+                    Subscription
+                </td>
+                <td style="text-align:right;font-weight:700;padding-top:24px;padding-bottom:16px;line-height:1.5">
+                    Billed Annually
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-bottom:16px;line-height:1.5">
+                    Seats ($300.00 per seat)
+                </td>
+                <td style="text-align:right;font-weight:700;padding-bottom:16px;line-height:1.5">
+                    1 Seat
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-bottom:16px;line-height:1.5">
+                    Subtotal
+                </td>
+                <td style="text-align:right;font-weight:700;padding-bottom:16px;line-height:1.5">
+                    $300.00
+                </td>
+            </tr>
+            
+            <tr>
+                <td style="padding-bottom:16px;color:rgb(6,129,70);line-height:1.5">
+                    Discount
+                </td>
+                <td style="text-align:right;font-weight:700;padding-bottom:16px;color:rgb(6,129,70);line-height:1.5">
+                    -$60.00
+                </td>
+            </tr>
+            
+            
+            
+            <tr>
+                <td style="padding-bottom:24px;line-height:1.5">
+                    Payment method
+                </td>
+                <td style="text-align:right;font-weight:700;padding-bottom:24px;line-height:1.5">
+                    <img style="width:24px;vertical-align:middle" src="https://www.docusign.net/Signing/Images/NotificationService/Visa.png" alt="Visa"> ending in 6413
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </td>
+            </tr>
+            <tr style="border-top:1px solid rgba(25, 24, 35, 0.09);font-size:20px;line-height:1.5">
+                <td style="padding-top:24px">
+                    Paid today
+                </td>
+                <td style="text-align:right;font-weight:700;padding-top:24px;line-height:1.5">
+                    $240.00 (USD)
+                </td>
+            </tr>
+            
+        </table></div></td></tr></tbody></table>
+    </td></tr></tbody></table>
+    
+    <table cellpadding="0" cellspacing="0" width="100%" style="border:0;border-collapse:collapse;border-spacing:0;font-family:Helvetica, Arial, sans-serif;font-size:16px;line-height:1.5;color:rgba(25, 24, 35, 0.9);width:100%"><tbody><tr><td style="border-top:1px solid rgba(25, 24, 35, 0.09);padding:0 40px 40px 40px">
+        <table cellpadding="0" cellspacing="0" width="100%" style="margin:40px 0 0 0;border:0;border-collapse:collapse;border-spacing:0;font-family:Helvetica, Arial, sans-serif;font-size:16px;line-height:1.5;color:rgba(25, 24, 35, 0.9);width:100%"><tbody><tr><td><div>
+            <div style="font-size:24px;font-weight:700;line-height:1.25">What's next?</div>
+            <div style="font-size:20px;line-height:1.5t;padding-top:8px">Start using eSignature by sending an envelope or signing a document.</div>
+            <div style="margin:24px 0 0 0;line-height:1.5">
+                <a target="_blank" rel="noopener noreferrer" href="https://emea01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fapp.docusign.com%2Fauth%3FsourceApp%3Dsparky&amp;data=05%7C01%7C%7Cb2dc34882eb94889002508dbb390e389%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C638301207088458301%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000%7C%7C%7C&amp;sdata=h4GeYqek2TjHgf3yA1MmHwbiaQJVkP1WN6jxh%2FWggKw%3D&amp;reserved=0" originalsrc="https://app.docusign.com/auth?sourceApp=sparky" shash="FGIyitDpKnLgOdWeS9Dfg0h6kQ/UfY5zkQmioxx1L46nY8+7CRprn95f6zPZtF7hhaS1Cx3G9mnCLwNe0a10YUsBhpv+7jp7eTuNCr9kRJa79sm6Up7+cPgYzHdAxsPHXRtNtzP92nf9WXKgFCBg10YzfyRQ/48yxweRBwcLX8c=" style="background-color:rgb(0, 105, 236);border-color:transparent;color:#ffffff;border-width:1px;border-style:solid;border-radius:2px;display:inline-block;font-family:Helvetica, Arial, sans-serif;font-size:16px;font-weight:bold;padding:8px 16px;text-align:center;text-decoration:none">Get Started</a>
+            </div>
+            <div style="margin:24px 0 0 0;line-height:1.5">
+                <a target="_blank" rel="noopener noreferrer" href="https://emea01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fsuccess.docusign.com%2Fesignature%2Fchecklist%2Fsimplified-sending%23step-1&amp;data=05%7C01%7C%7Cb2dc34882eb94889002508dbb390e389%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C638301207088614514%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000%7C%7C%7C&amp;sdata=pTq6delbjngYxq792aaxEPX270%2B%2BzRIh%2Fic1TKvcSxM%3D&amp;reserved=0" originalsrc="https://success.docusign.com/esignature/checklist/simplified-sending#step-1" shash="m546E/3AqVzENq7llBVAtOdn/r9TqoDPy7XTcPbrfCqZp7lM0XhJFZpJihLkzQ37Y8MfJA+uZWoVzgcX+esX9GrRKb8cl7Z2Jye8NOsCG+4eBM0aYYgGFgSO+JGPG9IgjnyGPq7zDLzNdS3sGpn1t/zxuB//nEbSJfK8m1kHl/0=" style="color:rgb(0, 105, 236)">Learn more about eSignature</a>
+            </div>
+        </div></td></tr></tbody></table>
+    </td></tr></tbody></table>
+    
+    <table cellpadding="0" cellspacing="0" width="100%" style="background-color:#f7f6f7;margin:0 0 0 0;border:0;border-collapse:collapse;border-spacing:0;font-family:Helvetica, Arial, sans-serif;font-size:16px;line-height:1.5;color:rgba(25, 24, 35, 0.9);width:100%"><tbody><tr><td style="padding:24px 40px"><p style="margin:16px 0"><b>Do Not Share This Email</b><br>This email contains a secure link to DocuSign. Please do not share this email, link, or access code with others.</p><p style="margin:16px 0">If you are having trouble, please visit our <a target="_blank" rel="noopener noreferrer" href="https://emea01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fsupport.docusign.com%2F&amp;data=05%7C01%7C%7Cb2dc34882eb94889002508dbb390e389%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C638301207088614514%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000%7C%7C%7C&amp;sdata=JAZ3mCGcfB3X1BGYFW1p5PA2y9kNjfm5psnofc1L8d0%3D&amp;reserved=0" originalsrc="https://support.docusign.com/" shash="DYPmCZMX7bz7Ci68rYvARs2m8L5T2MsZUfbyN9DV/RvSFvl8Fu3QBdxB34C10+SZEXcYghzPpFzdOTKKe2SO8JF6Z9tc/eZ9cfCFgrGm+69wMTrukoQrMAFLMkBiGgaKMoTLA7e7UOvt6Kks8uKEwpmeTf2Ps0QJgrbJQhyqf3s=" style="color:rgb(0, 105, 236)">Support Center</a>.</p><p style="margin:16px 0"><a target="_blank" rel="noopener noreferrer" href="https://emea01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.docusign.com%2Ffeatures-and-benefits%2Fmobile&amp;data=05%7C01%7C%7Cb2dc34882eb94889002508dbb390e389%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C638301207088614514%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000%7C%7C%7C&amp;sdata=%2B1mtpft7N8EdNZDPpAuOA18yLdLDuqLkU%2BX0VYEK1bg%3D&amp;reserved=0" originalsrc="https://www.docusign.com/features-and-benefits/mobile" shash="Yb9aSO8pxzuiz+TsEaz0wa924Ww1webU9VdF/qQB77faHM3QKoid+vpEULWDb3KrnxMYCHBgGZeLczmBVHlHoH/6z9emAh5AercjzzjO1uP+pkR5j2fZ5BWPraN54Pd8y7v2FMZPKWOjUpQARZkbQF24+Ky/NJCeV5vG2+q2Xeg=" style="color:rgb(0, 105, 236)">Download the DocuSign App</a></p></td></tr></tbody></table>
+</td></tr></tbody></table></td></tr></tbody></table></body></html>

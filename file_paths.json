@@ -1,0 +1,13 @@
+{
+    "pdf_mar": "~/Documents/Contrats/MAR",
+    "pdf_iade": "~/Documents/Contrats/IADE",
+    "excel_mar": "/Users/vincentperreard/Dropbox/SEL:SPFPL Mathilde/contrat remplacement MAR/MARS SELARL.xlsx",
+    "excel_iade": "/Users/vincentperreard/Dropbox/SEL:SPFPL Mathilde/Compta SEL/contrats/CDD à faire signer/IADE remplaçants.xlsx",
+    "word_mar": "/Users/vincentperreard/Dropbox/SEL:SPFPL Mathilde/contrat remplacement MAR/CDOM Remplacement Word.docx",
+    "word_iade": "/Users/vincentperreard/Dropbox/SEL:SPFPL Mathilde/Compta SEL/contrats/CDD à faire signer/modèle CDD IADE SELMATHILDE.docx",
+    "bulletins_salaire": "~/Documents/Bulletins_Salaire",
+    "excel_salaries": "/Users/vincentperreard/Dropbox/SEL:SPFPL Mathilde/Compta SEL/salaries.xlsx",
+    "dossier_factures": "/Users/vincentperreard/Dropbox/SEL:SPFPL Mathilde/Factures réglées",
+    "chemin_fichier_virement": "/Users/vincentperreard/Dropbox/SEL:SPFPL Mathilde/Compta SEL/compta SEL -rempla 2025.xlsx",
+    "script_docusign": "~/script contrats/envoidocusign12.py"
+}

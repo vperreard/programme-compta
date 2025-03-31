@@ -1,0 +1,15 @@
+
+# Fichiers contenant des données sensibles
+liste_ibans.csv
+resultats_factures.csv
+credentials.json
+factures_db.json
+analyse_facture20.py
+test_api1.py
+
+*IBAN*
+*.env
+*.key
+.DS_Store
+ancien_fichiers/
+
