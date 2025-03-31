@@ -1448,7 +1448,9 @@ def perform_mail_merge(word_file, replaced_name, replacing_name, start_date, pdf
         return None  
     
 def open_contract_creation_iade():
-    """Fenêtre pour créer un contrat de remplacement IADE."""
+    """Affiche le formulaire de création de contrat IADE dans le panneau droit."""
+    clear_right_frame()  # Nettoie le panneau droit avant d'y ajouter de nouveaux éléments
+    
     try:
         iade_data = pd.read_excel(file_paths["excel_iade"], sheet_name="Coordonnées IADEs")
     except FileNotFoundError:
@@ -1457,9 +1459,26 @@ def open_contract_creation_iade():
     except Exception as e:
         print(f"Erreur lors de l'ouverture du fichier Excel IADE : {e}")
         return
-
+    
+    # Conteneur principal - utilisation d'un PanedWindow pour diviser l'espace
+    main_container = tk.PanedWindow(right_frame, orient=tk.HORIZONTAL)
+    main_container.pack(fill="both", expand=True)
+    
+    # Cadre gauche pour le formulaire
+    form_container = tk.Frame(main_container, bg="#f0f4f7", padx=20, pady=20)
+    main_container.add(form_container, width=420)  # Largeur fixe pour le formulaire
+    
+    # Cadre droit pour les actions post-contrat (initialement vide)
+    actions_container = tk.Frame(main_container, bg="#f5f5f5", padx=20, pady=20)
+    main_container.add(actions_container, width=400)  # Largeur pour les actions
+    
+    # Titre du formulaire
+    tk.Label(form_container, text="🩺 Nouveau contrat IADE", 
+            font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    # Fonction pour sélectionner les dates
     def select_dates():
-        """Ouvre un seul calendrier pour sélectionner les dates de début et de fin."""
+        """Ouvre un calendrier pour sélectionner les dates de début et de fin."""
         selected_dates = []
 
         def on_date_select():
@@ -1472,7 +1491,7 @@ def open_contract_creation_iade():
                 end_date_var.set(selected_date)
                 date_picker.destroy()
 
-        date_picker = Toplevel(contract_window)
+        date_picker = Toplevel(root)
         date_picker.title("Sélectionner les dates")
 
         message_var = StringVar(value="Sélectionnez la date de début.")
@@ -1489,11 +1508,11 @@ def open_contract_creation_iade():
         calendar.pack(pady=10)
 
         Button(date_picker, text="Valider", command=on_date_select).pack(pady=5)
-
+        Button(date_picker, text="Fermer", command=date_picker.destroy).pack(pady=5)
+    
+    # Fonction pour enregistrer le contrat
     def save_contract_iade():
-        """Génère un fichier Excel et un contrat IADE, puis l'envoie à DocuSign."""
-        print("file_paths keys:", file_paths.keys())
-
+        """Génère un fichier Excel et un contrat IADE, puis affiche les options post-contrat."""
         # Récupération des valeurs depuis l'interface
         replacing_name = replacing_var.get()
         start_date = start_date_var.get()
@@ -1511,19 +1530,16 @@ def open_contract_creation_iade():
             replacing_data = iade_data[iade_data["NOMR"] == replacing_name].iloc[0]
             replacing_email = replacing_data["EMAIL"]
             
-            # ✅ Correction : Récupération du prénom et nom complet
-            replacing_name = f"{replacing_data['PRENOMR']} {replacing_data['NOMR']}".strip()
+            # Correction : Récupération du prénom et nom complet
+            replacing_full_name = f"{replacing_data['PRENOMR']} {replacing_data['NOMR']}".strip()
 
         except IndexError:
             print(f"❌ Erreur : Impossible de trouver l'IADE '{replacing_name}' dans la base.")
             return
 
-        # ✅ Correction de l'email pour éviter 'nan'
+        # Correction de l'email pour éviter 'nan'
         if pd.isna(replacing_email) or replacing_email in ["", "nan"]:
             replacing_email = "email_inconnu@exemple.com"
-
-        # ✅ DEBUG : Vérification avant d'envoyer à DocuSign
-        print(f"✅ DEBUG IADE : replacing_name = '{replacing_name}', replacing_email = '{replacing_email}'")
 
         # Définir les colonnes du fichier Excel temporaire
         columns = [
@@ -1531,9 +1547,6 @@ def open_contract_creation_iade():
             "LIEUNR", "DPTN", "ADRESSER", "NOSSR", "NATR", "EMAIL",
             "DATEDEBUT", "DATEFIN", "DATESIGN", "NBHEURES"
         ]
-
-        # Créer un DataFrame vide
-        contrat_iade = pd.DataFrame(columns=columns)
 
         # Récupérer les informations de l'IADE sélectionné
         row_data = {
@@ -1556,7 +1569,7 @@ def open_contract_creation_iade():
             "NBHEURES": nb_hours
         }
 
-        # Ajouter la ligne au DataFrame
+        # Créer un DataFrame avec les données
         contrat_iade = pd.DataFrame([row_data])
 
         # Définir le chemin du fichier temporaire
@@ -1568,82 +1581,111 @@ def open_contract_creation_iade():
 
         print(f"✅ Données du contrat IADE enregistrées dans {excel_temp_path}")
 
-        # Formatage des dates
-        try:
-            formatted_start_date = datetime.strptime(start_date, "%Y-%m-%d").strftime("%A %d %B %Y").capitalize()
-            formatted_end_date = datetime.strptime(end_date, "%Y-%m-%d").strftime("%A %d %B %Y").capitalize()
-            formatted_sign_date = datetime.strptime(sign_date, "%Y-%m-%d").strftime("%A %d %B %Y").capitalize()
-        except ValueError as e:
-            print(f"❌ Erreur de formatage des dates : {e}")
-            return
-
-        # Déterminer le dossier du fichier Word pour le publipostage
-        word_file = file_paths["word_iade"]
-        pdf_folder = os.path.expanduser(file_paths["pdf_iade"])
-
         # Effectuer le publipostage et générer le PDF
         pdf_path = perform_mail_merge(
-            file_paths["word_iade"],  # ✅ Modèle Word pour IADE
+            file_paths["word_iade"],  # Modèle Word pour IADE
             None,  # IADE n'a pas de remplacé
-            replacing_name,
+            replacing_full_name,
             start_date,
             os.path.expanduser(file_paths["pdf_iade"]),
             contract_type="IADE"
         )
 
-        if pdf_path:
-            print(f"✅ Contrat enregistré sous : {pdf_path}")
-            print(f"📆 DEBUG Avant post_contract_actions : start_date={start_date}, end_date={end_date}")
-
-            # Actions post-génération (ouvrir, envoyer à DocuSign, etc.)
-            post_contract_actions(pdf_path, None, replacing_name, None, replacing_email, start_date=start_date, end_date=end_date, contract_type="IADE")
-
-        else:
+        if not pdf_path:
             print("❌ Erreur : Le fichier PDF n'a pas pu être généré.")
-
-        # Quitter Word
-        quit_word()
-        contract_window.destroy()
-
-
-
-    # Création de la fenêtre
-    contract_window = Toplevel()
-    contract_window.title("Nouveau contrat remplacement IADE")
-
-    Label(contract_window, text="IADE remplaçant :").grid(row=0, column=0)
+            return
+            
+        print(f"✅ Contrat IADE enregistré sous : {pdf_path}")
+        
+        # Désactiver les éléments du formulaire
+        for widget in form_frame.winfo_children():
+            if isinstance(widget, (tk.Entry, tk.Button, tk.OptionMenu)):
+                widget.configure(state="disabled")
+                
+        # Vider le conteneur d'actions
+        for widget in actions_container.winfo_children():
+            widget.destroy()
+            
+        # Titre
+        tk.Label(actions_container, text="Actions sur le contrat", 
+                font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+        
+        # Information sur le contrat généré
+        info_text = f"Contrat généré pour:\n{replacing_full_name}\ndu {start_date} au {end_date}"
+        tk.Label(actions_container, text=info_text, justify=tk.LEFT, 
+                bg="#f5f5f5", padx=10, pady=5).pack(fill="x", pady=10)
+        
+        # Bouton pour ouvrir le PDF
+        def open_pdf():
+            subprocess.run(["open", "-a", "PDF Expert", pdf_path])
+            
+        tk.Button(actions_container, text="📄 Ouvrir avec PDF Expert", 
+                command=open_pdf, width=30).pack(pady=5)
+        
+        # Bouton pour envoyer à DocuSign
+        tk.Button(actions_container, text="📩 Envoyer en DocuSign", 
+                command=lambda: send_to_docusign(pdf_path, "IADE", start_date, end_date, 
+                                                replacing_full_name, replacing_email, 
+                                                None, None), 
+                width=30).pack(pady=5)
+        
+        # Bouton pour le règlement (désactivé)
+        tk.Button(actions_container, text="💰 Effectuer le règlement (à venir)", 
+                state="disabled", width=30).pack(pady=5)
+        
+        # Bouton pour revenir à l'accueil
+        tk.Button(actions_container, text="🏠 Retour à l'accueil", 
+                command=lambda: [clear_right_frame(), show_welcome_image()], 
+                width=30).pack(pady=20)
+        
+    # Formulaire principal
+    form_frame = tk.Frame(form_container, bg="#f0f4f7")
+    form_frame.pack(pady=10, fill="x")
+    
+    # IADE remplaçant
+    tk.Label(form_frame, text="IADE remplaçant :", bg="#f0f4f7").grid(row=0, column=0, sticky="w", pady=5)
     replacing_var = StringVar()
-    iade_menu = OptionMenu(contract_window, replacing_var, *iade_data["NOMR"].tolist())
-    iade_menu.grid(row=0, column=1)
-
-
+    replacing_menu = tk.OptionMenu(form_frame, replacing_var, *iade_data["NOMR"].tolist())
+    replacing_menu.grid(row=0, column=1, sticky="w", padx=5, pady=5)
+    
     # Bouton pour sélectionner les dates
-    Label(contract_window, text="Dates de début et de fin :").grid(row=1, column=0)
+    tk.Label(form_frame, text="Dates de début et de fin :", bg="#f0f4f7").grid(row=1, column=0, sticky="w", pady=5)
+    date_btn = Button(form_frame, text="📅 Sélectionner les dates", command=select_dates)
+    date_btn.grid(row=1, column=1, sticky="w", padx=5, pady=5)
+    
     start_date_var = StringVar()
     end_date_var = StringVar()
-    Button(contract_window, text="📅 Sélectionner les dates", command=select_dates).grid(row=1, column=1)
-    contract_window.geometry("600x300")
-    # Champ pour afficher la date de début
-    Label(contract_window, text="Date de début :").grid(row=2, column=0)
-    Entry(contract_window, textvariable=start_date_var, state="readonly").grid(row=2, column=1)
-
-    # Champ pour afficher la date de fin
-    Label(contract_window, text="Date de fin :").grid(row=3, column=0)
-    Entry(contract_window, textvariable=end_date_var, state="readonly").grid(row=3, column=1)
-
+    
+    # Date de début
+    tk.Label(form_frame, text="Date de début :", bg="#f0f4f7").grid(row=2, column=0, sticky="w", pady=5)
+    start_entry = Entry(form_frame, textvariable=start_date_var, state="readonly")
+    start_entry.grid(row=2, column=1, sticky="w", padx=5, pady=5)
+    
+    # Date de fin
+    tk.Label(form_frame, text="Date de fin :", bg="#f0f4f7").grid(row=3, column=0, sticky="w", pady=5)
+    end_entry = Entry(form_frame, textvariable=end_date_var, state="readonly")
+    end_entry.grid(row=3, column=1, sticky="w", padx=5, pady=5)
+    
     # Date de signature
-    Label(contract_window, text="Date de signature :").grid(row=4, column=0)
+    tk.Label(form_frame, text="Date de signature :", bg="#f0f4f7").grid(row=4, column=0, sticky="w", pady=5)
     sign_date_var = StringVar(value=datetime.today().strftime("%Y-%m-%d"))
-    Entry(contract_window, textvariable=sign_date_var).grid(row=4, column=1)
-
+    sign_entry = Entry(form_frame, textvariable=sign_date_var)
+    sign_entry.grid(row=4, column=1, sticky="w", padx=5, pady=5)
+    
     # Nombre d'heures par jour
-    Label(contract_window, text="Nombre d'heures par jour :").grid(row=5, column=0)
+    tk.Label(form_frame, text="Nombre d'heures par jour :", bg="#f0f4f7").grid(row=5, column=0, sticky="w", pady=5)
     nb_hours_var = StringVar(value="9")
-    Entry(contract_window, textvariable=nb_hours_var).grid(row=5, column=1)
-
-    # Bouton pour créer le contrat
-    Button(contract_window, text="Créer le contrat", command=save_contract_iade).grid(row=6, column=0, columnspan=2, pady=10)
-
+    hours_entry = Entry(form_frame, textvariable=nb_hours_var)
+    hours_entry.grid(row=5, column=1, sticky="w", padx=5, pady=5)
+    
+    # Bouton de création et annulation
+    create_btn = Button(form_frame, text="Créer le contrat", command=save_contract_iade, 
+                       font=("Arial", 12, "bold"), bg="#007ACC", fg="black")
+    create_btn.grid(row=6, column=0, pady=10, padx=5, sticky="w")
+    
+    cancel_btn = Button(form_frame, text="Annuler", command=lambda: [clear_right_frame(), show_welcome_image()], 
+                       font=("Arial", 10), bg="#f44336", fg="black")
+    cancel_btn.grid(row=6, column=1, pady=10, padx=5, sticky="w")
 
 
 
@@ -1877,7 +1919,7 @@ def open_contract_creation_mar():
 
 
    # Formulaire principal
-    form_frame = tk.Frame(frame, bg="#f0f4f7")
+    form_frame = tk.Frame(form_container, bg="#f0f4f7")
     form_frame.pack(pady=10, fill="x")
     
     # Médecin remplacé
@@ -2202,12 +2244,12 @@ def show_main_menu():
 
     # Création des boutons du menu
     Label(left_frame, text="Menu principal", font=("Arial", 16, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
-    Button(left_frame, text="📋 Gestion des contrats", command=open_contract_creation_mar).pack(fill="x", pady=10)
-    Button(left_frame, text="Nouveau contrat IADE", command=open_contract_creation_iade).pack(fill="x", pady=10)
+    Button(left_frame, text="📋 Nouveau contrat MAR", command=open_contract_creation_mar).pack(fill="x", pady=10)
+    Button(left_frame, text="🩺 Nouveau contrat IADE", command=open_contract_creation_iade).pack(fill="x", pady=10)  # Ajout de l'emoji 🩺
     Button(left_frame, text="📊 Comptabilité", command=open_accounting_menu).pack(fill="x", pady=10)
     Button(left_frame, text="📅 Plannings opératoires", command=planning).pack(fill="x", pady=10)
-    Button(left_frame, text="Paramètres", command=open_parameters).pack(fill="x", pady=10)
-    Button(left_frame, text="Quitter", command=root.destroy).pack(fill="x", pady=10)
+    Button(left_frame, text="⚙️ Paramètres", command=open_parameters).pack(fill="x", pady=10)
+    Button(left_frame, text="🚪 Quitter", command=root.destroy).pack(fill="x", pady=10)
 
     # Affichage de l'image dans le cadre droit
     show_welcome_image()
