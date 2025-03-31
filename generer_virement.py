@@ -10,8 +10,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
-# Charger les credentials depuis le fichier JSON
-with open('credentials.json', 'r') as file:
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(SCRIPT_DIR, 'credentials.json'), 'r') as file:
     credentials = json.load(file)
 
 

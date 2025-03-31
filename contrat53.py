@@ -1967,46 +1967,163 @@ def open_contract_creation_mar():
     
 def open_accounting_menu():
     """Affiche le menu de gestion comptable dans le panneau droit."""
-    global right_frame  # Utiliser le panneau droit global
+    clear_right_frame()  # Nettoie le panneau droit avant d'y ajouter de nouveaux éléments
     
-    # Nettoyer le contenu existant du panneau droit
-    for widget in right_frame.winfo_children():
-        widget.destroy()
+    # Conteneur principal - utilisation d'un PanedWindow pour diviser l'espace
+    main_container = tk.PanedWindow(right_frame, orient=tk.HORIZONTAL)
+    main_container.pack(fill="both", expand=True)
     
-    # Créer un cadre pour contenir tous les éléments du menu comptabilité
-    compta_frame = tk.Frame(right_frame, padx=20, pady=20, bg="#f2f7ff")
-    compta_frame.pack(fill="both", expand=True)
+    # Cadre gauche pour le menu comptabilité (même largeur que le menu principal)
+    compta_frame = tk.Frame(main_container, bg="#f0f4f7", padx=20, pady=20)
+    main_container.add(compta_frame, width=300)  # Même largeur que left_frame
     
-    # Titre
+    # Cadre droit pour l'affichage des fonctionnalités (initialement vide)
+    content_container = tk.Frame(main_container, bg="#f5f5f5", padx=20, pady=20)
+    main_container.add(content_container, width=900)  # Plus de place pour le contenu
+    
+    # Titre du menu
     tk.Label(compta_frame, text="📊 Menu Comptabilité", font=("Arial", 14, "bold"), 
              bg="#4a90e2", fg="white").pack(fill="x", pady=10)
     
-    # Boutons avec les mêmes fonctionnalités qu'avant
+    # Boutons du menu comptabilité
     tk.Button(compta_frame, text="📄 Bulletins de salaire", 
-              command=lambda: display_in_right_frame(show_bulletins),
-              width=30, bg="#DDDDDD", fg="black", 
+              command=lambda: display_bulletins_in_container(content_container),
+              width=25, bg="#DDDDDD", fg="black", 
               font=("Arial", 10, "bold")).pack(pady=10)
     
     tk.Button(compta_frame, text="📂 Frais et factures", 
-              command=launch_facture_analysis, 
-              width=30, bg="#DDDDDD", fg="black", 
+              command=lambda: display_factures_in_container(content_container), 
+              width=25, bg="#DDDDDD", fg="black", 
               font=("Arial", 10, "bold")).pack(pady=10)
     
     tk.Button(compta_frame, text="💰 Effectuer un virement", 
-              command=open_transfer_menu, 
-              width=30, bg="#DDDDDD", fg="black", 
+              command=lambda: display_transfer_in_container(content_container), 
+              width=25, bg="#DDDDDD", fg="black", 
               font=("Arial", 10, "bold")).pack(pady=10)
     
     tk.Button(compta_frame, text="💰 Virement rémunération MARS", 
-              command=open_virement_mar,
-              width=30, bg="#DDDDDD", fg="black", 
+              command=lambda: display_virement_mar_in_container(content_container),
+              width=25, bg="#DDDDDD", fg="black", 
               font=("Arial", 10, "bold")).pack(pady=10)
     
     # Retour au menu principal
     tk.Button(compta_frame, text="🔙 Retour au menu principal", 
-              command=show_main_menu, 
-              width=30, bg="#BBBBBB", fg="black", 
-              font=("Arial", 10, "bold")).pack(pady=10)
+              command=lambda: [clear_right_frame(), show_welcome_image()], 
+              width=25, bg="#BBBBBB", fg="black", 
+              font=("Arial", 10, "bold")).pack(pady=20)
+    
+    # Afficher un message d'accueil initial dans le conteneur de droite
+    tk.Label(content_container, text="Bienvenue dans le module comptabilité", 
+             font=("Arial", 16, "bold"), fg="#4a90e2", bg="#f5f5f5").pack(pady=20)
+    tk.Label(content_container, text="Choisissez une option dans le menu de gauche.", 
+             font=("Arial", 12), bg="#f5f5f5").pack(pady=10)
+
+
+def display_bulletins_in_container(container):
+    """Affiche les bulletins de salaire dans le conteneur spécifié."""
+    # Vider le conteneur
+    for widget in container.winfo_children():
+        widget.destroy()
+    
+    # Créer un cadre pour les bulletins
+    bulletins_frame = tk.Frame(container, bg="#f0f0f0")
+    bulletins_frame.pack(fill="both", expand=True)
+    
+    # Stocker ce cadre dans une variable globale pour que show_bulletins puisse l'utiliser
+    global current_frame
+    current_frame = bulletins_frame
+    
+    # Appeler la fonction existante pour afficher les bulletins
+    show_bulletins()
+
+
+def display_factures_in_container(container):
+    """Affiche une interface pour lancer l'analyse des factures."""
+    # Vider le conteneur
+    for widget in container.winfo_children():
+        widget.destroy()
+    
+    # Créer un frame pour l'analyse des factures
+    factures_frame = tk.Frame(container, bg="#f5f5f5", padx=20, pady=20)
+    factures_frame.pack(fill="both", expand=True)
+    
+    # Titre
+    tk.Label(factures_frame, text="📂 Analyse des factures", 
+             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    # Description
+    tk.Label(factures_frame, text="Cette fonction va lancer l'outil d'analyse des factures dans une fenêtre séparée.", 
+             font=("Arial", 12), bg="#f5f5f5").pack(pady=20)
+    
+    # Bouton pour lancer l'analyse
+    tk.Button(factures_frame, text="🚀 Lancer l'analyse des factures", 
+              command=launch_facture_analysis,
+              width=30, height=2, bg="#FFA500", fg="black", 
+              font=("Arial", 12, "bold")).pack(pady=20)
+
+
+def display_transfer_in_container(container):
+    """Affiche le menu de virement dans le conteneur spécifié."""
+    # Vider le conteneur
+    for widget in container.winfo_children():
+        widget.destroy()
+    
+    # Créer un frame pour le menu de virement
+    transfer_frame = tk.Frame(container, bg="#f5f5f5", padx=20, pady=20)
+    transfer_frame.pack(fill="both", expand=True)
+    
+    # Titre
+    tk.Label(transfer_frame, text="💰 Effectuer un virement", 
+             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    # Message d'instruction
+    tk.Label(transfer_frame, text="Cette fonctionnalité permet d'effectuer des virements aux fournisseurs.",
+             font=("Arial", 12), bg="#f5f5f5").pack(pady=20)
+    
+    # Bouton pour lancer la génération d'un virement
+    tk.Button(transfer_frame, text="🔄 Générer un virement",
+              command=lambda: open_virement_selection_window(),
+              width=30, height=2, bg="#4CAF50", fg="black",
+              font=("Arial", 12, "bold")).pack(pady=20)
+
+
+def display_virement_mar_in_container(container):
+    """Affiche le menu de virement pour les MARS dans le conteneur spécifié."""
+    # Vider le conteneur
+    for widget in container.winfo_children():
+        widget.destroy()
+    
+    # Créer un frame pour le menu de virement MAR
+    mar_frame = tk.Frame(container, bg="#f5f5f5", padx=20, pady=20)
+    mar_frame.pack(fill="both", expand=True)
+    
+    # Titre
+    tk.Label(mar_frame, text="💰 Virement rémunération MARS", 
+             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
+    
+    # Récupération du fichier depuis le chemin configuré
+    excel_file = file_paths.get("chemin_fichier_virement", "")
+    
+    # Message d'instruction
+    instruction_text = (
+        "1️⃣ Vérifiez attentivement chaque ligne des virements prévus.\n"
+        "2️⃣ Faites les modifications nécessaires.\n"
+        "3️⃣ Cliquez sur 'Sauvegarder et Valider les virements'."
+    )
+    
+    tk.Label(mar_frame, text=instruction_text, font=("Arial", 12), 
+             bg="#f5f5f5", fg="black", justify="left").pack(pady=20, padx=20)
+    
+    # Bouton pour ouvrir le fichier Excel
+    tk.Button(mar_frame, text="📊 Ouvrir le fichier Excel des virements", 
+              command=lambda: subprocess.run(["open", "-a", "Microsoft Excel", excel_file], check=True) if os.path.exists(excel_file) else messagebox.showerror("Erreur", f"Le fichier {excel_file} est introuvable."),
+              bg="#4682B4", fg="black", font=("Arial", 12, "bold"), width=30).pack(pady=10)
+    
+    # Bouton pour sauvegarder et valider les virements
+    tk.Button(mar_frame, text="💾 Sauvegarder et Valider les virements", 
+              command=lambda: open_virement_selection_window(),
+              bg="#4caf50", fg="black", font=("Arial", 12, "bold"), width=30).pack(pady=10)
+
 
 
 def display_in_right_frame(function_to_display):
@@ -2043,7 +2160,7 @@ def display_in_right_frame(function_to_display):
     wrapped_function()
 
 def launch_facture_analysis():
-    """Lance le script analyse_facture.py pour traiter les factures."""
+    """Lance le script analyse_facture.py dans un processus séparé."""
     script_path = "/Users/vincentperreard/script contrats/analyse_facture.py"
     factures_path = get_file_path("dossier_factures", verify_exists=True)
     
@@ -2059,16 +2176,15 @@ def launch_facture_analysis():
             # Passer le chemin comme argument avec --dossier
             cmd = ["python3", script_path, "--dossier", factures_path]
             print(f"🚀 Exécution de la commande: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True)
-            print(f"✅ Analyse des factures lancée avec succès dans {factures_path}.")
+            # Utiliser Popen pour ne pas bloquer l'interface
+            subprocess.Popen(cmd)
         else:
             print("⚠️ Chemin des factures non trouvé, utilisation du chemin par défaut.")
-            subprocess.run(["python3", script_path], check=True)
+            subprocess.Popen(["python3", script_path])
             print("✅ Analyse des factures lancée avec succès (chemin par défaut).")
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         print(f"❌ Erreur lors de l'exécution du script : {e}")
-    except FileNotFoundError:
-        print(f"❌ Erreur : Le fichier {script_path} est introuvable.")
+        messagebox.showerror("Erreur", f"Impossible de lancer l'analyse des factures : {e}")
         
 def open_transfer_menu():
     """Ouvre le menu pour effectuer un virement."""

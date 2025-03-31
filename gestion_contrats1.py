@@ -13,8 +13,9 @@ import PyPDF2  # Pour lire la date de fin du contrat dans le PDF
 import re  # Pour extraire les dates
 from config import get_file_path, file_paths
 # Charger les credentials depuis le fichier JSON
-with open('credentials.json', 'r') as file:
-    credentials = json.load(file)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(SCRIPT_DIR, 'credentials.json'), 'r') as file:
+    credentials = json.load(file)  # Cette ligne doit être indentée
 
 # 📂 Dossiers des contrats
 MAR_FOLDER = get_file_path("pdf_mar", verify_exists=True, create_if_missing=True)
