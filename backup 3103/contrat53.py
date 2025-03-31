@@ -302,24 +302,24 @@ def open_docusign_parameters():
     Button(param_window, text="Annuler", command=param_window.destroy).pack(pady=5)
 
 
-def show_post_contract_actions(container, pdf_path, replaced_name, replacing_name, 
-                            replaced_email, replacing_email, start_date, end_date, contract_type):
+def post_contract_actions(pdf_path, replaced_name, replacing_name, replaced_email, replacing_email, start_date=None, end_date=None, contract_type=None):
     """
-    Affiche les options post-création de contrat dans le conteneur spécifié.
+    Affiche une fenêtre avec les actions possibles après la génération d'un contrat.
     """
-    # Nettoyer le conteneur d'abord
-    for widget in container.winfo_children():
-        widget.destroy()
-    
-    # Titre
-    tk.Label(container, text="Actions disponibles", font=("Arial", 14, "bold"), 
-           bg="#4a90e2", fg="white").pack(fill="x", pady=10)
-    
-    # Description
-    tk.Label(container, text=f"Contrat généré pour:\n{replacing_name}\nremplaçant {replaced_name}\n{start_date} - {end_date}", 
-           font=("Arial", 10), justify=tk.LEFT, bg="#f5f5f5").pack(pady=10, anchor="w")
-    
-    
+    print("🔹 DEBUG : post_contract_actions -")
+    print(f"   📄 pdf_path = {pdf_path}")
+    print(f"   👨‍⚕️ replaced_name = {replaced_name}, replaced_email = {replaced_email}")
+    print(f"   👨‍⚕️ replacing_name = {replacing_name}, replacing_email = {replacing_email}")
+    print(f"   📆 start_date = {start_date}, end_date = {end_date}")
+    print(f"   🏷️ contract_type = {contract_type}")
+        
+    if contract_type == "IADE" and start_date and end_date:
+        print(f"📆 Période : {start_date} - {end_date}")
+
+    def open_pdf():
+        """Ouvre le contrat avec PDF Expert."""
+        subprocess.run(["open", "-a", "PDF Expert", pdf_path])
+
     def send_to_docusign_callback(pdf_path, contract_type, start_date, end_date, replacing_name, replacing_email, replaced_name=None, replaced_email=None):
         print("🔹 Début de la fonction send_to_docusign_callback()")
 
@@ -371,37 +371,33 @@ def show_post_contract_actions(container, pdf_path, replaced_name, replacing_nam
             print(f"❌ Erreur lors de l'envoi à DocuSign : {e}")
 
 
-    # Titre
-    tk.Label(container, text="Actions disponibles", font=("Arial", 14, "bold"), 
-           bg="#4a90e2", fg="white").pack(fill="x", pady=10)
-    
-    # Description
-    tk.Label(container, text=f"Contrat généré pour:\n{replacing_name}\nremplaçant {replaced_name}\n{start_date} - {end_date}", 
-           font=("Arial", 10), justify=tk.LEFT, bg="#f5f5f5").pack(pady=10, anchor="w")
-    
-    # Bouton pour ouvrir le PDF
-    def open_pdf():
-        """Ouvre le contrat avec PDF Expert."""
-        subprocess.run(["open", "-a", "PDF Expert", pdf_path])
-    
 
-    tk.Button(container, text="📄 Ouvrir avec PDF Expert", command=open_pdf, 
-            width=30).pack(pady=5)
-    
+
+    # Création de la fenêtre Tkinter
+    action_window = Toplevel()
+    action_window.title("Actions sur le contrat")
+    action_window.geometry("400x300")  # Ajustement de la taille
+
+    Label(action_window, text="Que souhaitez-vous faire ?", font=("Arial", 14, "bold")).pack(pady=10)
+
+    # Bouton pour ouvrir le PDF
+    Button(action_window, text="📄 Ouvrir avec PDF Expert", command=open_pdf, width=30).pack(pady=5)
 
     # Bouton pour envoyer à DocuSign
-    tk.Button(container, text="📩 Envoyer en DocuSign", 
-            command=send_to_docusign_callback, width=30).pack(pady=5)
-    
+    Button(action_window, text="📩 Envoyer en DocuSign", 
+        command=lambda: debug_and_send_to_docusign(pdf_path, contract_type, start_date, end_date, replacing_name, replacing_email, replaced_name, replaced_email), 
+        width=30).pack(pady=5)
+    def debug_and_send_to_docusign(pdf_path, contract_type, start_date, end_date, replacing_name, replacing_email, replaced_name, replaced_email):
+        print(f"📤 DEBUG Bouton : pdf_path={pdf_path}, contract_type={contract_type}, start_date={start_date}, end_date={end_date}, replacing_name={replacing_name}, replacing_email={replacing_email}, replaced_name={replaced_name}, replaced_email={replaced_email}")
+        send_to_docusign_callback(pdf_path, contract_type, start_date, end_date, replacing_name, replacing_email, replaced_name, replaced_email)
 
-    # Bouton pour effectuer le règlement (désactivé comme dans votre code original)
-    tk.Button(container, text="💰 Effectuer le règlement (à venir)", 
-            state="disabled", width=30).pack(pady=5)
+
+    # Bouton pour le règlement (désactivé pour l’instant)
+    Button(action_window, text="💰 Effectuer le règlement (à venir)", state="disabled", width=30).pack(pady=5)
     
-    # Bouton pour revenir à l'écran d'accueil
-    tk.Button(container, text="🏠 Retour à l'accueil", 
-            command=lambda: [clear_right_frame(), show_welcome_image()], 
-            width=30).pack(pady=20)
+     # Bouton pour fermer la fenêtre
+    Button(action_window, text="❌ Fermer", command=action_window.destroy, width=30).pack(pady=10)
+
 
 def send_to_docusign(pdf_path, contract_type, start_date, end_date, replacing_name, replacing_email, replaced_email=None, replaced_name=None):
     """
@@ -1648,10 +1644,7 @@ def open_contract_creation_iade():
 
 
 def open_contract_creation_mar():
-    """Affiche le formulaire de création de contrat MAR dans le panneau droit."""
-    clear_right_frame()  # Nettoie le panneau droit avant d'y ajouter de nouveaux éléments
-    
-    # Chargement des données
+    """Fenêtre pour créer un contrat de remplacement MAR."""
     mars_selarl = pd.read_excel(file_paths["excel_mar"], sheet_name="MARS SELARL")
     mars_rempla = pd.read_excel(file_paths["excel_mar"], sheet_name="MARS Remplaçants")
     
@@ -1659,25 +1652,10 @@ def open_contract_creation_mar():
     mars_selarl["FULL_NAME"] = mars_selarl["PRENOM"].fillna("").str.strip() + " " + mars_selarl["NOM"].fillna("").str.strip()
     mars_rempla["FULL_NAME"] = mars_rempla["PRENOMR"].fillna("").str.strip() + " " + mars_rempla["NOMR"].fillna("").str.strip()
     
+
     if mars_selarl is None or mars_rempla is None:
         return
-    
-    # Conteneur principal - utilisation d'un PanedWindow pour diviser l'espace
-    main_container = tk.PanedWindow(right_frame, orient=tk.HORIZONTAL)
-    main_container.pack(fill="both", expand=True)
-    
-    # Cadre gauche pour le formulaire
-    form_container = tk.Frame(main_container, bg="#f0f4f7", padx=20, pady=20)
-    main_container.add(form_container, width=420)  # Largeur fixe pour le formulaire
-    
-    # Cadre droit pour les actions post-contrat (initialement vide)
-    actions_container = tk.Frame(main_container, bg="#f5f5f5", padx=20, pady=20)
-    main_container.add(actions_container, width=400)  # Largeur pour les actions
-    
-    # Titre du formulaire
-    tk.Label(form_container, text="Nouveau contrat remplacement MAR", 
-            font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
-    
+
     def select_dates():
         """Ouvre un calendrier pour sélectionner les dates de début et de fin."""
         selected_dates = []
@@ -1710,14 +1688,13 @@ def open_contract_creation_mar():
                 end_date_var.set(selected_dates[0])
             date_picker.destroy()
 
-        # Crée la fenêtre de calendrier (reste un Toplevel car c'est une fenêtre modale)
-        date_picker = Toplevel(root)
+        # Crée la fenêtre de calendrier
+        date_picker = Toplevel(contract_window)
         date_picker.title("Sélectionner les dates")
 
         message_var = StringVar()
         message_var.set("Sélectionnez la date de début.")
-        Label(date_picker, text="Sélectionner les dates", font=("Arial", 12, "bold")).pack(pady=5)
-        Label(date_picker, textvariable=message_var, font=("Arial", 10)).pack(pady=5)
+        Label(date_picker, textvariable=message_var, font=("Arial", 12)).pack(pady=5)
 
         calendar = Calendar(
             date_picker,
@@ -1729,21 +1706,16 @@ def open_contract_creation_mar():
         )
         calendar.pack(pady=10)
 
-        Button(date_picker, text="Valider", command=on_date_select).pack(pady=5, side=tk.LEFT, padx=10)
-        Button(date_picker, text="Fermer", command=close_calendar).pack(pady=5, side=tk.RIGHT, padx=10)
+        Button(date_picker, text="Valider", command=on_date_select).pack(pady=5)
+        Button(date_picker, text="Fermer", command=close_calendar).pack(pady=5)
 
-        pass
-    
     def save_contract():
-        """Sauvegarde les informations du contrat et génère le PDF."""
         print("file_paths keys:", file_paths.keys())
         
         replaced_name = replaced_var.get().strip()
         replacing_name = replacing_var.get().strip()
         start_date = start_date_var.get()
         end_date = end_date_var.get()
-        sign_date = sign_date_var.get()
-        daily_fee = daily_fee_var.get()
 
         # Vérification insensible à la casse et aux espaces
         replaced_matches = mars_selarl[mars_selarl["FULL_NAME"].str.strip().str.upper() == replaced_name.strip().upper()]
@@ -1760,6 +1732,18 @@ def open_contract_creation_mar():
             return
         replacing_data = replacing_matches.iloc[0]
 
+        print(f"🛠️ DEBUG Recherche email de {replaced_name} dans la base :")
+        print(mars_selarl[["FULL_NAME", "EMAIL"]])  # Affiche les emails disponibles
+
+        # Récupération de l'email en s'assurant qu'il n'est pas None
+        replaced_email = replaced_data.get("EMAIL", "").strip()
+        if not replaced_email or replaced_email.lower() in ["nan", "none", ""]:
+            print(f"⚠️ Attention : Email du médecin remplacé ({replaced_name}) est vide ou invalide. Assignation par défaut.")
+            replaced_email = "email_inconnu@exemple.com"
+
+        print(f"✅ Email récupéré pour {replaced_name} : {replaced_email}")
+
+
         print(f"🛠️ DEBUG : Données du remplacé : {replaced_data.to_dict()}")
         print(f"🛠️ DEBUG : Données du remplaçant : {replacing_data.to_dict()}")
 
@@ -1768,31 +1752,68 @@ def open_contract_creation_mar():
             print("❌ Erreur : Les dates ne sont pas définies correctement.")
             return
 
-        # Récupération et nettoyage des emails
-        replaced_email = replaced_data.get("EMAIL", "").strip()
-        if pd.isna(replaced_email) or not replaced_email:
-            replaced_email = "email_inconnu@exemple.com"
-            
-        replacing_email = replacing_data.get("EMAILR", "").strip()
-        if pd.isna(replacing_email) or not replacing_email:
-            replacing_email = "email_inconnu@exemple.com"
+        print(f"📆 DEBUG Avant post_contract_actions : start_date={start_date}, end_date={end_date}")
 
-        # Création d'une ligne pour la feuille CONTRAT
+        print(f"🛠️ DEBUG replaced_name = {replaced_name}")
+        print(f"🛠️ DEBUG Recherche email de {replaced_name} dans la base :")
+        print(mars_selarl[["FULL_NAME", "EMAIL"]])  # Affiche les données
+
+
+        # Sécurisation des emails
+        replaced_email = replaced_data.get("EMAIL", "email_inconnu@exemple.com") or "email_inconnu@exemple.com"
+        replacing_email = replacing_data.get("EMAILR", "email_inconnu@exemple.com") or "email_inconnu@exemple.com"
+
+        print(f"🛠️ DEBUG : replaced_email AVANT DocuSign = {replaced_email}")
+
+        print(f"✅ PDF généré avec succès pour {replaced_name} et {replacing_name}")
+        
+
+        # Vérification et correction des emails
+        replaced_email = replaced_data["EMAIL"] if pd.notna(replaced_data["EMAIL"]) else "email_inconnu@exemple.com"
+        replacing_email = replacing_data["EMAILR"] if pd.notna(replacing_data["EMAILR"]) else "email_inconnu@exemple.com"
+
+
+
+        
+        # Formatage de la date
+        try:
+            formatted_date = datetime.strptime(start_date, "%Y-%m-%d").strftime("%Y%m%d")
+        except ValueError as e:
+            print(f"Erreur de formatage de la date : {e}")
+            return
+
+        # Définir le nom du fichier PDF
+        pdf_filename = f"{formatted_date}_Contrat_{replacing_name}_{replaced_name}.pdf"
+
+        # Définir le chemin complet
+        pdf_folder = file_paths.get("pdf_mar", "~/Documents/Contrats/MAR")
+        pdf_folder = os.path.expanduser(pdf_folder)  # Gérer les chemins avec ~
+        ensure_directory_exists(pdf_folder)
+        pdf_path = os.path.join(pdf_folder, pdf_filename)
+
+        replacing_prenom = replacing_data["PRENOMR"]
+        replacing_nom = replacing_data["NOMR"]
+
+
+        print(f"Données du remplaçant : {replacing_prenom} {replacing_nom} ({replacing_email})")
+
+
+        # Création de la ligne pour la feuille CONTRAT
         new_row = [
             replaced_data["NOM"],
             replaced_data["PRENOM"],
             str(replaced_data["N ORDRE"]),
-            replaced_email,
+            replaced_data["EMAIL"],
             replacing_data["NOMR"],
             replacing_data["PRENOMR"],
             str(replacing_data["N ORDRER"]),
-            replacing_email,
+            replacing_data["EMAILR"],
             replacing_data["AdresseR"],
             str(replacing_data["URSSAF"]),
-            start_date,
-            end_date,
-            sign_date,
-            int(daily_fee)
+            start_date_var.get(),
+            end_date_var.get(),
+            sign_date_var.get(),
+            int(daily_fee_var.get())
         ]
 
         # Création d'un DataFrame avec la structure de la feuille CONTRAT
@@ -1803,17 +1824,20 @@ def open_contract_creation_mar():
         ]
         contrat = pd.DataFrame([new_row], columns=contrat_columns)
 
-        # Préparation pour le publipostage
+        # Déterminer le dossier du fichier Word pour le publipostage
+        base_dir = os.path.dirname(file_paths["word_mar"])
         word_file = file_paths["word_mar"]
-        base_dir = os.path.dirname(word_file)
+
+        # Enregistrer le fichier Excel
         excel_path = os.path.join(base_dir, "contrat_mars_selarl.xlsx")
-        
-        # Sauvegarde du fichier Excel temporaire
         save_to_new_excel(contrat, excel_path)
 
-        # Génération du contrat PDF
+        # 🔍 Debug : Avant l'appel à perform_mail_merge
+        print("🛠️ Début de la génération du contrat...")
+
+        # Génération du contrat et enregistrement
         pdf_path = perform_mail_merge(
-            file_paths["word_mar"],
+            file_paths["word_mar"],  # ✅ Modèle Word à utiliser
             replaced_name,
             replacing_name,
             start_date,
@@ -1822,107 +1846,90 @@ def open_contract_creation_mar():
         )
 
         if not pdf_path or not os.path.exists(pdf_path):
-            print(f"❌ Erreur : Le fichier PDF n'a pas pu être généré.")
+            print(f"❌ Erreur : Le fichier PDF {pdf_path} est introuvable.")
             return
 
         print(f"✅ Contrat généré : {pdf_path}")
 
-        # Désactivation des widgets du formulaire
-        for widget in form_frame.winfo_children():
-            if isinstance(widget, (tk.Entry, tk.Button, tk.OptionMenu)):
-                widget.configure(state="disabled")
+        # 🔍 Vérification et sécurisation des emails
+        if replaced_email in [None, "", "nan"]:
+            replaced_email = "email_inconnu@exemple.com"
+        if replacing_email in [None, "", "nan"]:
+            replacing_email = "email_inconnu@exemple.com"
         
-        # Vider le conteneur d'actions
-        for widget in actions_container.winfo_children():
-            widget.destroy()
-        
-        # Création du conteneur pour les actions post-contrat
-        title_label = tk.Label(actions_container, text="Actions sur le contrat", 
-                            font=("Arial", 14, "bold"), bg="#4a90e2", fg="white")
-        title_label.pack(fill="x", pady=10)
-        
-        # Information sur le contrat généré
-        info_text = f"Contrat généré pour:\n{replacing_name}\nremplaçant {replaced_name}\ndu {start_date} au {end_date}"
-        info_label = tk.Label(actions_container, text=info_text, justify=tk.LEFT, 
-                            bg="#f5f5f5", padx=10, pady=5)
-        info_label.pack(fill="x", pady=10)
-        
-        # Fonction pour ouvrir le PDF
-        def open_pdf():
-            subprocess.run(["open", "-a", "PDF Expert", pdf_path])
-        
-        # Bouton pour ouvrir le PDF
-        open_button = tk.Button(actions_container, text="📄 Ouvrir avec PDF Expert", 
-                            command=open_pdf, width=30)
-        open_button.pack(pady=5)
-        
-        # Bouton pour envoyer à DocuSign
-        docusign_button = tk.Button(actions_container, text="📩 Envoyer en DocuSign", 
-                            command=lambda: send_to_docusign(pdf_path, "MAR", start_date, end_date, 
-                                                            replacing_name, replacing_email, 
-                                                            replaced_name, replaced_email), 
-                            width=30)
-        docusign_button.pack(pady=5)
-        
-        # Bouton pour le règlement (désactivé)
-        pay_button = tk.Button(actions_container, text="💰 Effectuer le règlement (à venir)", 
-                            state="disabled", width=30)
-        pay_button.pack(pady=5)
-        
-        # Bouton pour revenir à l'écran d'accueil
-        home_button = tk.Button(actions_container, text="🏠 Retour à l'accueil", 
-                            command=lambda: [clear_right_frame(), show_welcome_image()], 
-                            width=30)
-        home_button.pack(pady=20)
+        # Formatage des noms pour DocuSign
+        replacing_name = f"{replacing_data['PRENOMR']} {replacing_data['NOMR']}"
+        replaced_name = f"{replaced_data['PRENOM']} {replaced_data['NOM']}"
+
+        # Appel des actions post-génération (ouvrir, envoyer à DocuSign, etc.)
+        if start_date is None or end_date is None or start_date == "" or end_date == "":
+            print("❌ Erreur : Les dates du contrat ne sont pas correctement définies.")
+            return
+        print(f"📆 DEBUG Avant post_contract_actions : start_date={start_date}, end_date={end_date}")
+
+        if not pdf_path or not os.path.exists(pdf_path):
+            print(f"❌ Erreur : Le fichier PDF {pdf_path} est introuvable.")
+            return
+
+        print("📤 DEBUG Final avant envoi DocuSign :")
+        print(f"   🔹 pdf_path = {pdf_path}")
+        print(f"   🔹 replacing_name = {replacing_name}")
+        print(f"   🔹 replacing_email = {replacing_email}")
+        print(f"   🔹 replaced_name = {replaced_name}")
+        print(f"   🔹 replaced_email = {replaced_email}")
+        print(f"   🔹 start_date = {start_date}")
+        print(f"   🔹 end_date = {end_date}")
+        print(f"   🔹 contract_type = MAR")
 
 
-   # Formulaire principal
-    form_frame = tk.Frame(frame, bg="#f0f4f7")
-    form_frame.pack(pady=10, fill="x")
-    
-    # Médecin remplacé
-    tk.Label(form_frame, text="Médecin remplacé :", bg="#f0f4f7").grid(row=0, column=0, sticky="w", pady=5)
+
+        post_contract_actions(pdf_path, replaced_name, replacing_name, replaced_email, replacing_email, start_date=start_date, end_date=end_date, contract_type="MAR")
+
+        # Quitter Word à la fin
+        quit_word()
+
+        contract_window.destroy()
+
+
+
+    # Création de la fenêtre
+    contract_window = Toplevel()
+    contract_window.title("Nouveau contrat remplacement MAR")
+
+    Label(contract_window, text="Médecin remplacé :").grid(row=0, column=0)
     replaced_var = StringVar()
-    tk.OptionMenu(form_frame, replaced_var, *mars_selarl["FULL_NAME"].tolist()).grid(row=0, column=1, sticky="w", padx=5, pady=5)
-    
-    # Médecin remplaçant
-    tk.Label(form_frame, text="Médecin remplaçant :", bg="#f0f4f7").grid(row=1, column=0, sticky="w", pady=5)
+    OptionMenu(contract_window, replaced_var, *mars_selarl["FULL_NAME"].tolist()).grid(row=0, column=1)
+
+    Label(contract_window, text="Médecin remplaçant :").grid(row=1, column=0)
     replacing_var = StringVar()
-    tk.OptionMenu(form_frame, replacing_var, *mars_rempla["FULL_NAME"].tolist()).grid(row=1, column=1, sticky="w", padx=5, pady=5)
-    
-    # Bouton pour sélectionner les dates
-    tk.Label(form_frame, text="Dates de début et de fin :", bg="#f0f4f7").grid(row=2, column=0, sticky="w", pady=5)
-    Button(form_frame, text="📅 Sélectionner les dates", command=select_dates).grid(row=2, column=1, sticky="w", padx=5, pady=5)
-    
+    OptionMenu(contract_window, replacing_var, *mars_rempla["FULL_NAME"].tolist()).grid(row=1, column=1)
+
+    # Bouton unique pour sélectionner les dates
+    Label(contract_window, text="Dates de début et de fin :").grid(row=2, column=0)
+    Button(contract_window, text="📅 Sélectionner les dates", command=select_dates).grid(row=2, column=1)
+
     start_date_var = StringVar()
     end_date_var = StringVar()
-    
+
     # Champ pour afficher la date de début
-    tk.Label(form_frame, text="Date de début :", bg="#f0f4f7").grid(row=3, column=0, sticky="w", pady=5)
-    Entry(form_frame, textvariable=start_date_var, state="readonly").grid(row=3, column=1, sticky="w", padx=5, pady=5)
-    
+    Label(contract_window, text="Date de début :").grid(row=3, column=0)
+    Entry(contract_window, textvariable=start_date_var, state="readonly").grid(row=3, column=1)
+
     # Champ pour afficher la date de fin
-    tk.Label(form_frame, text="Date de fin :", bg="#f0f4f7").grid(row=4, column=0, sticky="w", pady=5)
-    Entry(form_frame, textvariable=end_date_var, state="readonly").grid(row=4, column=1, sticky="w", padx=5, pady=5)
-    
-    # Date de signature
-    tk.Label(form_frame, text="Date de signature :", bg="#f0f4f7").grid(row=5, column=0, sticky="w", pady=5)
+    Label(contract_window, text="Date de fin :").grid(row=4, column=0)
+    Entry(contract_window, textvariable=end_date_var, state="readonly").grid(row=4, column=1)
+
+    Label(contract_window, text="Date de signature :").grid(row=5, column=0)
     sign_date_var = StringVar(value=datetime.today().strftime("%Y-%m-%d"))
-    Entry(form_frame, textvariable=sign_date_var).grid(row=5, column=1, sticky="w", padx=5, pady=5)
-    
-    # Forfait journalier
-    tk.Label(form_frame, text="Forfait journalier (€) :", bg="#f0f4f7").grid(row=6, column=0, sticky="w", pady=5)
+    Entry(contract_window, textvariable=sign_date_var).grid(row=5, column=1)
+
+    Label(contract_window, text="Forfait journalier (€) :").grid(row=6, column=0)
     daily_fee_var = StringVar(value="1000")
-    Entry(form_frame, textvariable=daily_fee_var).grid(row=6, column=1, sticky="w", padx=5, pady=5)
-    
-    # Bouton de création
-    Button(form_frame, text="Créer le contrat", command=save_contract, 
-           font=("Arial", 12, "bold"), bg="#007ACC", fg="black").grid(row=7, column=0, pady=10, padx=5, sticky="w")
-    
-    # Bouton de retour
-    Button(form_frame, text="Annuler", command=lambda: [clear_right_frame(), show_welcome_image()], 
-           font=("Arial", 10), bg="#f44336", fg="black").grid(row=7, column=1, pady=10, padx=5, sticky="w")
-    
+    Entry(contract_window, textvariable=daily_fee_var).grid(row=6, column=1)
+
+    Button(contract_window, text="Créer le contrat", command=save_contract).grid(row=7, column=0, columnspan=3, pady=10)
+
+
 def open_accounting_menu():
     """Ouvre la fenêtre de gestion comptable."""
     compta_window = tk.Toplevel()
@@ -2163,11 +2170,7 @@ def open_virement_selection_window():
     
 def planning():
     print ("Fonction en implémentation")
-
-def clear_right_frame():
-    """Supprime tous les widgets du cadre droit avant d'en ajouter de nouveaux."""
-    for widget in right_frame.winfo_children():
-        widget.destroy()    
+    
 
 
 
