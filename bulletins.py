@@ -14,7 +14,8 @@ from generer_virement import generer_xml_virements  # Import de la fonction
 
 
 # 🔹 Configuration des fichiers et cache
-SETTINGS_FILE = os.path.expanduser("~/Documents/Contrats/file_paths.json")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SETTINGS_FILE = os.path.join(SCRIPT_DIR, "file_paths.json")
 CACHE_FILE = os.path.expanduser("~/Documents/Contrats/bulletins_cache.json")
 
 # 🔹 Dictionnaire des mois
@@ -397,7 +398,16 @@ def open_virement_window(tree):
 # 📌 Fonction pour recharger le cache en forçant la lecture des fichiers PDF
 def update_cache(force_reload=False):
     """Recharge les bulletins de salaire et met à jour le cache, uniquement si nécessaire."""
-    global bulletins_cache
+    global bulletins_cache, bulletins_path
+    try:
+        with open(SETTINGS_FILE, "r") as f:
+            file_paths = json.load(f)
+        bulletins_path = file_paths.get("bulletins_salaire", os.path.expanduser("~/Documents/Bulletins_Salaire"))
+        print(f"📂 Chemin des bulletins utilisé : {bulletins_path}")
+    except Exception as e:
+        print(f"⚠️ Erreur lors du chargement du chemin des bulletins: {e}")
+    
+    
     print(f"📂 DEBUG : Chemin utilisé pour recharger le cache = {bulletins_path}")
     print(f"📂 Chemin des bulletins scanné : {bulletins_path}")
     print(f"🔄 Rechargement du cache... Force reload : {force_reload}")
@@ -579,6 +589,17 @@ def show_details_in_frame(annee, mois, parent_frame):
 
 def show_bulletins_in_frame(frame):
     """Version de show_bulletins qui affiche dans un cadre existant."""
+    # Recharger les chemins depuis la configuration
+    global bulletins_path
+    try:
+        with open(SETTINGS_FILE, "r") as f:
+            file_paths = json.load(f)
+        bulletins_path = file_paths.get("bulletins_salaire", os.path.expanduser("~/Documents/Bulletins_Salaire"))
+        print(f"📂 Chemin des bulletins chargé: {bulletins_path}")
+    except Exception as e:
+        print(f"⚠️ Erreur lors du chargement du chemin des bulletins: {e}")
+    
+  
     # Configuration du cadre
     frame.config(bg="#f0f0f0")
 
