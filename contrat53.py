@@ -3375,72 +3375,67 @@ def display_bulletins_in_container(container):
     # Appeler la fonction avec le cadre créé
     show_bulletins_in_frame(bulletins_frame)
 
-
 def display_factures_in_container(container):
-    """Intègre l'outil d'analyse des factures directement dans le conteneur spécifié."""
-    # Vider le conteneur
+    """Intègre l'outil d'analyse des factures en plein écran."""
+    # Vider TOTALEMENT le conteneur
     for widget in container.winfo_children():
         widget.destroy()
     
-    # Créer un frame pour l'analyse des factures
+    # Modifier la configuration du container pour qu'il prenne tout l'espace
+    container.pack_forget()  # Réinitialiser le packing précédent
+    container.pack(fill="both", expand=True)  # Prendre tout l'espace disponible
+    
+    # Importer dynamiquement le module
+    from analyse_facture import AnalyseFactures
+    
+    # Créer un frame pour l'analyse des factures qui prend tout l'espace
     factures_frame = tk.Frame(container, bg="#f5f5f5")
     factures_frame.pack(fill="both", expand=True)
     
-    # Titre
-    tk.Label(factures_frame, text="📂 Analyse des factures", 
-             font=("Arial", 14, "bold"), bg="#4a90e2", fg="white").pack(fill="x", pady=10)
-    
-    # Importer notre module refactorisé et intégrer l'analyseur
     try:
-        import analyse_facture
-        
         # Récupérer le chemin des factures depuis la configuration
         factures_path = get_file_path("dossier_factures", verify_exists=True)
         
-        # Intégrer l'analyseur dans notre interface
-        analyseur, ui_elements = analyse_facture.integrer_analyseur_factures(factures_frame, factures_path)
+        # Initialiser l'analyseur
+        analyseur = AnalyseFactures(factures_path)
         
-        # Ajouter un bouton de retour en bas de l'interface
-        tk.Button(
-            factures_frame,
-            text="🔙 Retour au menu comptabilité",
-            command=open_accounting_menu,
-            bg="#B0C4DE",
-            fg="black",
+        # Créer l'interface de l'analyseur dans le conteneur
+        root, ui_elements = analyseur.creer_interface(factures_frame)
+        
+        # Ajouter un bouton de retour au menu principal
+        bouton_retour = tk.Button(
+            factures_frame, 
+            text="🔙 Retour au menu", 
+            command=lambda: [
+                clear_right_frame(),  # Nettoyer le frame de droite
+                show_main_menu()  # Revenir au menu principal
+            ],
+            bg="#B0C4DE", 
+            fg="black", 
             font=("Arial", 10, "bold")
-        ).pack(side="bottom", pady=10)
+        )
+        bouton_retour.pack(side="bottom", pady=10)
         
     except Exception as e:
-        # En cas d'erreur, afficher un message et un bouton pour lancer en externe
-        error_label = tk.Label(
-            factures_frame,
-            text=f"Erreur lors du chargement de l'analyseur de factures : {str(e)}",
-            font=("Arial", 12),
-            fg="red",
-            bg="#f5f5f5",
-            wraplength=600
-        )
-        error_label.pack(pady=20)
+        # Gestion des erreurs comme précédemment
+        tk.Label(factures_frame, 
+                 text=f"Erreur lors du chargement de l'analyseur de factures : {str(e)}",
+                 font=("Arial", 12), 
+                 fg="red", 
+                 bg="#f5f5f5", 
+                 wraplength=600).pack(pady=20)
         
         # Bouton pour lancer en mode externe
-        tk.Button(
-            factures_frame,
-            text="🚀 Lancer en mode indépendant",
-            command=launch_facture_analysis,  # Conserver la fonction d'origine comme fallback
-            bg="#FFA500",
-            fg="black",
-            font=("Arial", 12, "bold")
-        ).pack(pady=10)
-        
-        # Bouton pour revenir au menu comptabilité
-        tk.Button(
-            factures_frame,
-            text="🔙 Retour au menu comptabilité",
-            command=open_accounting_menu,
-            bg="#B0C4DE",
-            fg="black",
-            font=("Arial", 10, "bold")
-        ).pack(pady=10)
+        tk.Button(factures_frame, 
+                  text="🚀 Lancer en mode indépendant", 
+                  command=launch_facture_analysis,  
+                  bg="#FFA500", 
+                  fg="black", 
+                  font=("Arial", 12, "bold")).pack(pady=10)
+
+
+
+
 
 def display_transfer_in_container(container):
     """Affiche le menu de virement dans le conteneur spécifié."""

@@ -1079,231 +1079,231 @@ def on_recharger_fichiers(self, tree, forcer_reanalyse=False, mettre_a_jour_list
         # Appliquer les filtres pour rafraîchir l'affichage
         appliquer_filtres()
     
-    def on_verifier_nouvelles_factures(self, mettre_a_jour_listes_filtres=None):
-        """Vérifie les nouvelles factures en arrière-plan et met à jour l'interface."""
-        def task():
-            self.verifier_nouvelles_factures()
-            # Mise à jour des filtres et de l'interface
-            if mettre_a_jour_listes_filtres:
-                mettre_a_jour_listes_filtres()
-        
-        # Lancer la vérification dans un thread séparé
-        thread = threading.Thread(target=task)
-        thread.daemon = True
-        thread.start()
+def on_verifier_nouvelles_factures(self, mettre_a_jour_listes_filtres=None):
+    """Vérifie les nouvelles factures en arrière-plan et met à jour l'interface."""
+    def task():
+        self.verifier_nouvelles_factures()
+        # Mise à jour des filtres et de l'interface
+        if mettre_a_jour_listes_filtres:
+            mettre_a_jour_listes_filtres()
     
-    def fermer(self, root):
-        """Ferme proprement toutes les fenêtres Tkinter."""
-        if self.loupe_window:
-            self.loupe_window.destroy()
-            self.loupe_window = None
+    # Lancer la vérification dans un thread séparé
+    thread = threading.Thread(target=task)
+    thread.daemon = True
+    thread.start()
+    
+def fermer(self, root):
+    """Ferme proprement toutes les fenêtres Tkinter."""
+    if self.loupe_window:
+        self.loupe_window.destroy()
+        self.loupe_window = None
 
-        for window in root.winfo_children():
-            window.destroy()  # Détruit toutes les fenêtres enfants
+    for window in root.winfo_children():
+        window.destroy()  # Détruit toutes les fenêtres enfants
 
-        # Si c'est une fenêtre principale (Tk), la fermer
-        if isinstance(root, tk.Tk):
-            root.destroy()
+    # Si c'est une fenêtre principale (Tk), la fermer
+    if isinstance(root, tk.Tk):
+        root.destroy()
 
-    def realiser_virement(self, tree):
-        """Ouvre une fenêtre pour réaliser un virement et met à jour le statut de paiement."""
-        from generer_virement import generer_xml_virements, envoyer_virement_vers_lcl
-        
-        selected_item = tree.selection()
-        if not selected_item:
-            messagebox.showwarning("Aucune sélection", "Veuillez sélectionner une facture.")
+def realiser_virement(self, tree):
+    """Ouvre une fenêtre pour réaliser un virement et met à jour le statut de paiement."""
+    from generer_virement import generer_xml_virements, envoyer_virement_vers_lcl
+    
+    selected_item = tree.selection()
+    if not selected_item:
+        messagebox.showwarning("Aucune sélection", "Veuillez sélectionner une facture.")
+        return
+
+    item_id = selected_item[0]
+    values = tree.item(item_id, "values")
+    
+    if not values:
+        return
+
+    # **Récupérer les données de la facture sélectionnée**
+    date_facture = values[0] if values[0] else "N/A"
+    montant_facture = values[2] if values[2] else "0.00 €"
+    iban_facture = values[3] if values[3] else "N/A"
+    reference_facture = values[4] if values[4] else "N/A"
+
+    # **Vérifier si l'IBAN est déjà enregistré**
+    liste_ibans = self.df_ibans.to_dict(orient="records")
+    ibans_connus = [entry["IBAN"] for entry in liste_ibans]
+    iban_inconnu = iban_facture not in ibans_connus and iban_facture != "N/A"
+
+    # **Créer la fenêtre de virement (ajustement taille)**
+    virement_window = tk.Toplevel()
+    virement_window.title("Réaliser un Virement")
+    virement_window.geometry("750x280")  # ✅ Ajustement de la hauteur
+    virement_window.transient()
+    virement_window.grab_set()
+
+    frame = ttk.Frame(virement_window, padding=10)
+    frame.pack(fill="both", expand=True)
+
+    # **Date du jour pour pré-remplissage**
+    date_du_jour = datetime.today().strftime("%d-%m-%Y")
+
+    # **Définition des variables avec pré-remplissage**
+    date_virement_var = tk.StringVar(value=date_du_jour)
+    reference_var = tk.StringVar(value=reference_facture)
+    iban_var = tk.StringVar(value=iban_facture)
+    montant_var = tk.StringVar(value=montant_facture)
+
+    # **Champs du formulaire avec pré-remplissage**
+    ttk.Label(frame, text="Date de Virement :").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+    date_entry = ttk.Entry(frame, textvariable=date_virement_var, width=15)
+    date_entry.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+
+    ttk.Label(frame, text="Référence :").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+    reference_entry = ttk.Entry(frame, textvariable=reference_var, width=30)
+    reference_entry.grid(row=1, column=1, padx=5, pady=5, sticky="w")
+
+    ttk.Label(frame, text="IBAN :").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+    iban_entry = ttk.Entry(frame, textvariable=iban_var, width=30)
+    iban_entry.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+
+    # **Bouton pour choisir un IBAN dans la liste**
+    btn_choisir_iban = ttk.Button(frame, text="🔍", command=lambda: self.choisir_iban(virement_window, iban_var))
+    btn_choisir_iban.grid(row=2, column=2, padx=5, pady=5)
+
+    # **Bouton "Ajouter nouvel IBAN" aligné avec la loupe**
+    if iban_inconnu:
+        lbl_alert = ttk.Label(frame, text="⚠️ Cet IBAN est inconnu de la liste", foreground="red")
+        lbl_alert.grid(row=3, column=1, padx=5, pady=2, sticky="w")
+
+        btn_ajouter_iban = ttk.Button(frame, text="Ajouter nouvel IBAN", command=lambda: self.ajouter_iban(virement_window, iban_var.get()))
+        btn_ajouter_iban.grid(row=2, column=3, padx=5, pady=5, sticky="w")  # ✅ Placement à côté de la loupe
+
+    # ✅ **Correction : placer le montant plus bas pour éviter la superposition**
+    ttk.Label(frame, text="Montant (€) :").grid(row=4, column=0, padx=5, pady=5, sticky="w")
+    montant_entry = ttk.Entry(frame, textvariable=montant_var, width=15)
+    montant_entry.grid(row=4, column=1, padx=5, pady=5, sticky="w")
+
+    def valider_virement():
+        """Vérifie et envoie le virement."""
+        date_virement = date_virement_var.get().strip()
+        reference = reference_var.get().strip()
+        iban = iban_var.get().strip()
+        montant = montant_var.get().strip()
+
+        if not date_virement or not reference or not iban or not montant:
+            messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs du virement.")
             return
 
-        item_id = selected_item[0]
-        values = tree.item(item_id, "values")
-        
-        if not values:
+        try:
+            # 🔹 Préparation du virement
+            virement_data = [{
+                "beneficiaire": values[1],  # Nom du fournisseur
+                "iban": iban,
+                "montant": float(montant.replace("€", "").replace(",", ".")),
+                "objet": reference
+            }]
+            
+            # 🔹 Génération du fichier XML
+            fichier_xml = generer_xml_virements(virement_data)
+            
+            # 🔹 Envoi du virement
+            envoyer_virement_vers_lcl(fichier_xml)
+            
+            # ✅ Mise à jour de l'interface après un virement réussi
+            new_values = list(values)
+            new_values[6] = f"✔️ {date_virement}"  # Met à jour le statut de paiement
+            tree.item(item_id, values=tuple(new_values))
+
+            # Mise à jour du DataFrame
+            fichier = values[5]  # Nom du fichier
+            self.df_factures.loc[self.df_factures["fichier"] == fichier, "paiement"] = f"✔️ {date_virement}"
+            self.df_factures.to_csv(self.CSV_FACTURES, index=False)
+
+            messagebox.showinfo("Succès", f"Virement de {montant} validé.")
+            virement_window.destroy()
+            
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Une erreur s'est produite : {e}")
+
+    # Boutons d'action
+    btn_valider = ttk.Button(frame, text="Valider Virement", command=valider_virement)
+    btn_valider.grid(row=5, column=1, pady=10)
+
+    # Bouton "Annuler"
+    btn_annuler = ttk.Button(frame, text="Annuler", command=virement_window.destroy)
+    btn_annuler.grid(row=5, column=2, pady=10)
+
+def choisir_iban(self, parent_window, iban_var):
+    """Ouvre une fenêtre pour sélectionner un IBAN depuis la liste des fournisseurs."""
+    iban_window = tk.Toplevel(parent_window)
+    iban_window.title("Choisir un IBAN")
+    iban_window.geometry("450x250")
+    iban_window.transient(parent_window)
+    iban_window.grab_set()
+
+    # Récupérer les IBANs triés par ordre alphabétique du fournisseur
+    ibans = self.df_ibans.to_dict(orient="records")
+    ibans = sorted(ibans, key=lambda x: x.get("fournisseur", ""))
+
+    lb = tk.Listbox(iban_window, height=10, width=50)
+    lb.pack(padx=10, pady=10, fill="both", expand=True)
+
+    for item in ibans:
+        lb.insert("end", f"{item['fournisseur']} - {item['IBAN']}")
+
+    def selectionner_iban():
+        """Sélectionne l'IBAN et ferme la fenêtre."""
+        selection = lb.curselection()
+        if selection:
+            iban_var.set(ibans[selection[0]]["IBAN"])
+        iban_window.destroy()
+
+    # Boutons
+    btn_select = ttk.Button(iban_window, text="Sélectionner", command=selectionner_iban)
+    btn_select.pack(pady=5)
+
+    btn_cancel = ttk.Button(iban_window, text="Annuler", command=iban_window.destroy)
+    btn_cancel.pack(pady=5)
+
+def ajouter_iban(self, parent_window, iban_initial=""):
+    """Ouvre une fenêtre pour enregistrer un nouvel IBAN."""
+    enregistrer_window = tk.Toplevel(parent_window)
+    enregistrer_window.title("Enregistrer un nouvel IBAN")
+    enregistrer_window.geometry("500x160")
+    enregistrer_window.transient(parent_window)
+    enregistrer_window.grab_set()
+
+    frame = ttk.Frame(enregistrer_window, padding=10)
+    frame.pack(fill="both", expand=True)
+
+    ttk.Label(frame, text="Fournisseur :").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+    fournisseur_var = tk.StringVar()
+    fournisseur_entry = ttk.Entry(frame, textvariable=fournisseur_var, width=30)
+    fournisseur_entry.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+
+    ttk.Label(frame, text="IBAN :").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+    nouvel_iban_var = tk.StringVar(value=iban_initial)
+    nouvel_iban_entry = ttk.Entry(frame, textvariable=nouvel_iban_var, width=30)
+    nouvel_iban_entry.grid(row=1, column=1, padx=5, pady=5, sticky="w")
+
+    def sauvegarder_iban():
+        """Enregistre le nouvel IBAN dans la liste."""
+        fournisseur = fournisseur_var.get().strip()
+        nouvel_iban = nouvel_iban_var.get().strip()
+
+        if not fournisseur or not nouvel_iban:
+            messagebox.showwarning("Champs incomplets", "Veuillez renseigner tous les champs.")
             return
 
-        # **Récupérer les données de la facture sélectionnée**
-        date_facture = values[0] if values[0] else "N/A"
-        montant_facture = values[2] if values[2] else "0.00 €"
-        iban_facture = values[3] if values[3] else "N/A"
-        reference_facture = values[4] if values[4] else "N/A"
+        # Ajouter au DataFrame
+        new_row = pd.DataFrame({"fournisseur": [fournisseur], "IBAN": [nouvel_iban]})
+        self.df_ibans = pd.concat([self.df_ibans, new_row], ignore_index=True)
+        
+        # Sauvegarder dans le CSV
+        self.df_ibans.to_csv(self.IBAN_LISTE_CSV, index=False)
+        
+        messagebox.showinfo("Succès", f"IBAN de {fournisseur} ajouté avec succès !")
+        enregistrer_window.destroy()
 
-        # **Vérifier si l'IBAN est déjà enregistré**
-        liste_ibans = self.df_ibans.to_dict(orient="records")
-        ibans_connus = [entry["IBAN"] for entry in liste_ibans]
-        iban_inconnu = iban_facture not in ibans_connus and iban_facture != "N/A"
-
-        # **Créer la fenêtre de virement (ajustement taille)**
-        virement_window = tk.Toplevel()
-        virement_window.title("Réaliser un Virement")
-        virement_window.geometry("750x280")  # ✅ Ajustement de la hauteur
-        virement_window.transient()
-        virement_window.grab_set()
-
-        frame = ttk.Frame(virement_window, padding=10)
-        frame.pack(fill="both", expand=True)
-
-        # **Date du jour pour pré-remplissage**
-        date_du_jour = datetime.today().strftime("%d-%m-%Y")
-
-        # **Définition des variables avec pré-remplissage**
-        date_virement_var = tk.StringVar(value=date_du_jour)
-        reference_var = tk.StringVar(value=reference_facture)
-        iban_var = tk.StringVar(value=iban_facture)
-        montant_var = tk.StringVar(value=montant_facture)
-
-        # **Champs du formulaire avec pré-remplissage**
-        ttk.Label(frame, text="Date de Virement :").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        date_entry = ttk.Entry(frame, textvariable=date_virement_var, width=15)
-        date_entry.grid(row=0, column=1, padx=5, pady=5, sticky="w")
-
-        ttk.Label(frame, text="Référence :").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        reference_entry = ttk.Entry(frame, textvariable=reference_var, width=30)
-        reference_entry.grid(row=1, column=1, padx=5, pady=5, sticky="w")
-
-        ttk.Label(frame, text="IBAN :").grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        iban_entry = ttk.Entry(frame, textvariable=iban_var, width=30)
-        iban_entry.grid(row=2, column=1, padx=5, pady=5, sticky="w")
-
-        # **Bouton pour choisir un IBAN dans la liste**
-        btn_choisir_iban = ttk.Button(frame, text="🔍", command=lambda: self.choisir_iban(virement_window, iban_var))
-        btn_choisir_iban.grid(row=2, column=2, padx=5, pady=5)
-
-        # **Bouton "Ajouter nouvel IBAN" aligné avec la loupe**
-        if iban_inconnu:
-            lbl_alert = ttk.Label(frame, text="⚠️ Cet IBAN est inconnu de la liste", foreground="red")
-            lbl_alert.grid(row=3, column=1, padx=5, pady=2, sticky="w")
-
-            btn_ajouter_iban = ttk.Button(frame, text="Ajouter nouvel IBAN", command=lambda: self.ajouter_iban(virement_window, iban_var.get()))
-            btn_ajouter_iban.grid(row=2, column=3, padx=5, pady=5, sticky="w")  # ✅ Placement à côté de la loupe
-
-        # ✅ **Correction : placer le montant plus bas pour éviter la superposition**
-        ttk.Label(frame, text="Montant (€) :").grid(row=4, column=0, padx=5, pady=5, sticky="w")
-        montant_entry = ttk.Entry(frame, textvariable=montant_var, width=15)
-        montant_entry.grid(row=4, column=1, padx=5, pady=5, sticky="w")
-
-        def valider_virement():
-            """Vérifie et envoie le virement."""
-            date_virement = date_virement_var.get().strip()
-            reference = reference_var.get().strip()
-            iban = iban_var.get().strip()
-            montant = montant_var.get().strip()
-
-            if not date_virement or not reference or not iban or not montant:
-                messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs du virement.")
-                return
-
-            try:
-                # 🔹 Préparation du virement
-                virement_data = [{
-                    "beneficiaire": values[1],  # Nom du fournisseur
-                    "iban": iban,
-                    "montant": float(montant.replace("€", "").replace(",", ".")),
-                    "objet": reference
-                }]
-                
-                # 🔹 Génération du fichier XML
-                fichier_xml = generer_xml_virements(virement_data)
-                
-                # 🔹 Envoi du virement
-                envoyer_virement_vers_lcl(fichier_xml)
-                
-                # ✅ Mise à jour de l'interface après un virement réussi
-                new_values = list(values)
-                new_values[6] = f"✔️ {date_virement}"  # Met à jour le statut de paiement
-                tree.item(item_id, values=tuple(new_values))
-
-                # Mise à jour du DataFrame
-                fichier = values[5]  # Nom du fichier
-                self.df_factures.loc[self.df_factures["fichier"] == fichier, "paiement"] = f"✔️ {date_virement}"
-                self.df_factures.to_csv(self.CSV_FACTURES, index=False)
-
-                messagebox.showinfo("Succès", f"Virement de {montant} validé.")
-                virement_window.destroy()
-                
-            except Exception as e:
-                messagebox.showerror("Erreur", f"Une erreur s'est produite : {e}")
-
-        # Boutons d'action
-        btn_valider = ttk.Button(frame, text="Valider Virement", command=valider_virement)
-        btn_valider.grid(row=5, column=1, pady=10)
-
-        # Bouton "Annuler"
-        btn_annuler = ttk.Button(frame, text="Annuler", command=virement_window.destroy)
-        btn_annuler.grid(row=5, column=2, pady=10)
-    
-    def choisir_iban(self, parent_window, iban_var):
-        """Ouvre une fenêtre pour sélectionner un IBAN depuis la liste des fournisseurs."""
-        iban_window = tk.Toplevel(parent_window)
-        iban_window.title("Choisir un IBAN")
-        iban_window.geometry("450x250")
-        iban_window.transient(parent_window)
-        iban_window.grab_set()
-
-        # Récupérer les IBANs triés par ordre alphabétique du fournisseur
-        ibans = self.df_ibans.to_dict(orient="records")
-        ibans = sorted(ibans, key=lambda x: x.get("fournisseur", ""))
-
-        lb = tk.Listbox(iban_window, height=10, width=50)
-        lb.pack(padx=10, pady=10, fill="both", expand=True)
-
-        for item in ibans:
-            lb.insert("end", f"{item['fournisseur']} - {item['IBAN']}")
-
-        def selectionner_iban():
-            """Sélectionne l'IBAN et ferme la fenêtre."""
-            selection = lb.curselection()
-            if selection:
-                iban_var.set(ibans[selection[0]]["IBAN"])
-            iban_window.destroy()
-
-        # Boutons
-        btn_select = ttk.Button(iban_window, text="Sélectionner", command=selectionner_iban)
-        btn_select.pack(pady=5)
-
-        btn_cancel = ttk.Button(iban_window, text="Annuler", command=iban_window.destroy)
-        btn_cancel.pack(pady=5)
-
-    def ajouter_iban(self, parent_window, iban_initial=""):
-        """Ouvre une fenêtre pour enregistrer un nouvel IBAN."""
-        enregistrer_window = tk.Toplevel(parent_window)
-        enregistrer_window.title("Enregistrer un nouvel IBAN")
-        enregistrer_window.geometry("500x160")
-        enregistrer_window.transient(parent_window)
-        enregistrer_window.grab_set()
-
-        frame = ttk.Frame(enregistrer_window, padding=10)
-        frame.pack(fill="both", expand=True)
-
-        ttk.Label(frame, text="Fournisseur :").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        fournisseur_var = tk.StringVar()
-        fournisseur_entry = ttk.Entry(frame, textvariable=fournisseur_var, width=30)
-        fournisseur_entry.grid(row=0, column=1, padx=5, pady=5, sticky="w")
-
-        ttk.Label(frame, text="IBAN :").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        nouvel_iban_var = tk.StringVar(value=iban_initial)
-        nouvel_iban_entry = ttk.Entry(frame, textvariable=nouvel_iban_var, width=30)
-        nouvel_iban_entry.grid(row=1, column=1, padx=5, pady=5, sticky="w")
-
-        def sauvegarder_iban():
-            """Enregistre le nouvel IBAN dans la liste."""
-            fournisseur = fournisseur_var.get().strip()
-            nouvel_iban = nouvel_iban_var.get().strip()
-
-            if not fournisseur or not nouvel_iban:
-                messagebox.showwarning("Champs incomplets", "Veuillez renseigner tous les champs.")
-                return
-
-            # Ajouter au DataFrame
-            new_row = pd.DataFrame({"fournisseur": [fournisseur], "IBAN": [nouvel_iban]})
-            self.df_ibans = pd.concat([self.df_ibans, new_row], ignore_index=True)
-            
-            # Sauvegarder dans le CSV
-            self.df_ibans.to_csv(self.IBAN_LISTE_CSV, index=False)
-            
-            messagebox.showinfo("Succès", f"IBAN de {fournisseur} ajouté avec succès !")
-            enregistrer_window.destroy()
-
-        ttk.Button(frame, text="Enregistrer", command=sauvegarder_iban).grid(row=2, column=0, padx=5, pady=5)
-        ttk.Button(frame, text="Annuler", command=enregistrer_window.destroy).grid(row=2, column=1, padx=5, pady=5)
+    ttk.Button(frame, text="Enregistrer", command=sauvegarder_iban).grid(row=2, column=0, padx=5, pady=5)
+    ttk.Button(frame, text="Annuler", command=enregistrer_window.destroy).grid(row=2, column=1, padx=5, pady=5)
 
 # Point d'entrée principal du module
 def main():
