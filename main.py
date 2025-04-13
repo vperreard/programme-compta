@@ -125,6 +125,10 @@ class MainApplication(tk.Tk):
         self.contracts_tab = self.tabs.add_tab("Contrats", bg=COLORS["secondary"])
         self.create_contracts_tab()
         
+        # Onglet Comptabilité
+        self.accounting_tab = self.tabs.add_tab("Comptabilité", bg=COLORS["secondary"])
+        self.create_accounting_tab()
+        
         # Onglet Factures
         self.invoices_tab = self.tabs.add_tab("Factures", bg=COLORS["secondary"])
         self.create_invoices_tab()
@@ -289,6 +293,43 @@ class MainApplication(tk.Tk):
         # Cadre pour les bulletins (initialement vide)
         self.bulletins_frame = create_frame(self.bulletins_tab)
         self.bulletins_frame.pack(fill="both", expand=True, padx=10, pady=10)
+    
+    def create_accounting_tab(self):
+        """
+        Crée le contenu de l'onglet Comptabilité.
+        """
+        # Titre
+        create_label(
+            self.accounting_tab, 
+            "Gestion comptable",
+            style="subtitle"
+        ).pack(pady=20)
+        
+        # Cadre pour les boutons
+        buttons_frame = create_frame(self.accounting_tab)
+        buttons_frame.pack(pady=20)
+        
+        # Boutons pour les différentes fonctionnalités
+        accounting_buttons = [
+            ("Bulletins de salaire", self.open_bulletins_accounting, "primary"),
+            ("Frais et factures", self.open_invoice_analysis, "primary"),
+            ("Effectuer un virement", self.open_transfer, "info"),
+            ("Virement rémunération MARS", self.open_virement_mar, "info")
+        ]
+        
+        for text, command, style in accounting_buttons:
+            create_button(
+                buttons_frame, 
+                text=text, 
+                command=command,
+                style=style,
+                width=25,
+                height=2
+            ).pack(pady=10)
+        
+        # Cadre pour le contenu (initialement vide)
+        self.accounting_content_frame = create_frame(self.accounting_tab)
+        self.accounting_content_frame.pack(fill="both", expand=True, padx=10, pady=10)
     
     def create_settings_tab(self):
         """
@@ -725,6 +766,116 @@ class MainApplication(tk.Tk):
         contrat53.manage_salaries()
         
         self.status_bar.set_message("Interface de gestion des salariés ouverte.")
+    
+    def open_bulletins_accounting(self):
+        """
+        Ouvre l'interface de consultation des bulletins dans l'onglet comptabilité.
+        """
+        self.status_bar.set_message("Ouverture de l'interface de consultation des bulletins...")
+        
+        # Nettoyer l'interface existante
+        for widget in self.accounting_content_frame.winfo_children():
+            widget.destroy()
+        
+        # Créer un cadre pour l'interface de consultation des bulletins
+        bulletins_frame = create_frame(self.accounting_content_frame)
+        bulletins_frame.pack(fill="both", expand=True)
+        
+        # Appeler la fonction de consultation des bulletins
+        bulletins.show_bulletins_in_frame(bulletins_frame)
+        
+        self.status_bar.set_message("Interface de consultation des bulletins ouverte.")
+    
+    def open_virement_mar(self):
+        """
+        Ouvre l'interface de virement pour les MARS.
+        """
+        self.status_bar.set_message("Ouverture de l'interface de virement pour les MARS...")
+        
+        # Nettoyer l'interface existante
+        for widget in self.accounting_content_frame.winfo_children():
+            widget.destroy()
+        
+        # Créer un cadre pour l'interface de virement
+        virement_frame = create_frame(self.accounting_content_frame)
+        virement_frame.pack(fill="both", expand=True)
+        
+        # Titre
+        create_label(
+            virement_frame, 
+            "Virement rémunération MARS",
+            style="subtitle"
+        ).pack(pady=20)
+        
+        # Description
+        description = (
+            "Cette fonctionnalité permet de générer et d'envoyer des virements pour la rémunération des MARS.\n"
+            "Vous pouvez sélectionner les médecins et les montants à virer."
+        )
+        
+        create_label(
+            virement_frame, 
+            description,
+            style="body"
+        ).pack(pady=10, padx=50)
+        
+        # Boutons
+        buttons_frame = create_frame(virement_frame)
+        buttons_frame.pack(pady=20)
+        
+        # Bouton pour ouvrir le fichier Excel des virements
+        excel_file = get_file_path("chemin_fichier_virement", "")
+        
+        create_button(
+            buttons_frame, 
+            text="Ouvrir le fichier Excel des virements", 
+            command=lambda: self.open_excel_file(excel_file),
+            style="primary",
+            width=30
+        ).pack(pady=10)
+        
+        # Bouton pour générer les virements
+        create_button(
+            buttons_frame, 
+            text="Générer et envoyer les virements", 
+            command=self.generate_mar_virements,
+            style="accent",
+            width=30
+        ).pack(pady=10)
+        
+        self.status_bar.set_message("Interface de virement pour les MARS ouverte.")
+    
+    def open_excel_file(self, file_path):
+        """
+        Ouvre un fichier Excel avec l'application par défaut.
+        """
+        if not file_path or not os.path.exists(file_path):
+            show_error("Erreur", f"Le fichier {file_path} est introuvable.")
+            return
+        
+        try:
+            if sys.platform == "darwin":  # macOS
+                os.system(f"open -a 'Microsoft Excel' '{file_path}'")
+            elif sys.platform == "win32":  # Windows
+                os.startfile(file_path)
+            else:  # Linux
+                os.system(f"xdg-open '{file_path}'")
+        except Exception as e:
+            show_error("Erreur", f"Impossible d'ouvrir le fichier Excel : {str(e)}")
+    
+    def generate_mar_virements(self):
+        """
+        Génère et envoie les virements pour les MARS.
+        """
+        try:
+            # Appeler la fonction de génération des virements
+            from generer_virement import open_virement_selection_window
+            open_virement_selection_window()
+            
+            self.status_bar.set_message("Interface de sélection des virements ouverte.")
+        except Exception as e:
+            show_error("Erreur", f"Impossible de générer les virements : {str(e)}")
+            self.status_bar.set_message("Erreur lors de la génération des virements.")
 
 def main():
     """
