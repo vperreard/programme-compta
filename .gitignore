@@ -13,3 +13,60 @@ test_api1.py
 .DS_Store
 ancien_fichiers/
 
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# Local configuration
+config.json
+file_paths.json
+
+# Sensitive data
+*.key
+*.pem
+*.env
+credentials.json
+
+# Temporary files
+*.tmp
+*.bak
+.DS_Store
+
+# Generated files
+*.pdf
+*.docx
+*.xlsx
+*.csv
+!requirements.txt
+
+# Backup files
+backups/
+*_backup*
+
+# Test files
+test_*
+*_test.py
+
+# Documentation
+docs/_build/

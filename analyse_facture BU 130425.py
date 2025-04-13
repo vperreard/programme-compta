@@ -598,7 +598,7 @@ class AnalyseFactures:
             
         # Configuration de la zone de gauche (tableau, zone de texte et boutons)
         frame_left = ttk.Frame(root)
-        frame_left.pack(side="left", fill="both", expand=True, padx=0, pady=0)
+        frame_left.pack(side="left", fill="both", expand=True, padx=10, pady=10)
 
         # Définition des colonnes
         tree = ttk.Treeview(frame_left, columns=("Date","fournisseur", "Montant", "IBAN", "Référence", "Fichier", "paiement"), show="headings")
